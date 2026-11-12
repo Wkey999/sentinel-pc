@@ -1,0 +1,2 @@
+# Preserve exact bytes for reproducible report fixtures and hashed source documents.
+* -text

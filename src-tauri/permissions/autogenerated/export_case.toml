@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-case"
+description = "Enables the export_case command without any pre-configured scope."
+commands.allow = ["export_case"]
+
+[[permission]]
+identifier = "deny-export-case"
+description = "Denies the export_case command without any pre-configured scope."
+commands.deny = ["export_case"]

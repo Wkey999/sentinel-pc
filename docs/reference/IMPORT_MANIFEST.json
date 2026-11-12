@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "importedOn": "2026-11-12",
+  "sourceDirectory": "D:\\codex\\2026-11-12\\referenced-chatgpt-conversation-this-is-an\\outputs",
+  "files": [
+    {
+      "sourceName": "Sentinel-PC-Codex开发项目文档.md",
+      "projectPath": "docs/PROJECT_SPEC.md",
+      "sha256": "F8740FEB321627AF2245DFDE2F9D63CE975B254252B21501F34B60D63AFCC567",
+      "bytes": 79410
+    },
+    {
+      "sourceName": "Sentinel-PC-Codex启动指令.txt",
+      "projectPath": "docs/reference/START_INSTRUCTIONS.txt",
+      "sha256": "E43AD218B8152DEDF913D9D1C00D81BEECD9ACD76A596FB21764F2F661C5D525",
+      "bytes": 2011
+    },
+    {
+      "sourceName": "Sentinel-PC-Pulse与PC-AI复用研究.md",
+      "projectPath": "docs/reference/UPSTREAM_RESEARCH.md",
+      "sha256": "A267317C28C2036CF4A7B0B995534A1A7A861A8267685E44AC5639A40A1F1795",
+      "bytes": 34771
+    },
+    {
+      "sourceName": "Sentinel-PC-复用源码清单.json",
+      "projectPath": "docs/reference/UPSTREAM_SOURCE_INVENTORY.json",
+      "sha256": "40F547F8E6E5A6D8C2515067324ED18E56CADD5869B2F0583F32D015FD220C6A",
+      "bytes": 18471
+    },
+    {
+      "sourceName": "Sentinel-PC-复用核验记录.json",
+      "projectPath": "docs/reference/UPSTREAM_VERIFICATION.json",
+      "sha256": "8BA863E9B7EAC7C49E591E082C285CC352E424A99C6FDD0A81B230254DA22C5F",
+      "bytes": 1597
+    }
+  ]
+}

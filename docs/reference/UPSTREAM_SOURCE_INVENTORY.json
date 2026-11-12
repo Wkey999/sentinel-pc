@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-11-12",
+  "scope": "Selected-file source review; not a full repository or release audit",
+  "repositories": [
+    {
+      "repo": "Regncreative/PulseDiagnostics",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "branch": "master"
+    },
+    {
+      "repo": "David-Martel/PC-AI",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "branch": "main"
+    }
+  ],
+  "files": [
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "LICENSE",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "5d836908951b41ccb0e1a8c0588027d5d92fd82d",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/LICENSE"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/CMakeLists.txt",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "050916c187d18682cf40ea5a43ad8fcf65b7b032",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/CMakeLists.txt"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/pubspec.yaml",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "322d5da406d5202d3d876e26d88e8391a0b57fa5",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/pubspec.yaml"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/src/intelligence/crash_explainer.cpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "cbe35387898cc139484be29bf6de98b7acddf840",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/src/intelligence/crash_explainer.cpp"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/src/intelligence/app_crash_explainer.cpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "bba8044e863dba8ed81872fffdd3e7425fabf7ed",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/src/intelligence/app_crash_explainer.cpp"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/src/intelligence/bugcheck_catalog.cpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "a4e6d650f9ae1577340c2db29dc30ee6a8417300",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/src/intelligence/bugcheck_catalog.cpp"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/src/intelligence/event_intelligence.cpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "503116bb5e43ae78b10a184d2862eb6782f3007e",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/src/intelligence/event_intelligence.cpp"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/src/collectors/event_log_collector.cpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "1caca4773422f3400dc81bb53751b77cbc990311",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/src/collectors/event_log_collector.cpp"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/src/collectors/evtx_file_reader.cpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "68a7220d9231ad1e3cc0600c661c3fd9679fe5bb",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/src/collectors/evtx_file_reader.cpp"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/lib/assistant/diagnostic_tool_allowlist.dart",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "8de90fd08fc0a4d5b13cf64bc688be45c211eb3e",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/lib/assistant/diagnostic_tool_allowlist.dart"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/lib/assistant/assistant_orchestrator.dart",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "589755aa39b143877eb8d75c504506b7b00bb733",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/lib/assistant/assistant_orchestrator.dart"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/lib/assistant/ipc_assistant_tool_layer.dart",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "33c1bbaab3dfc548b5c02beb6a1a3f9916dd5bdb",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/lib/assistant/ipc_assistant_tool_layer.dart"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/lib/features/privacy/personal_data_redactor.dart",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "9033036f41806f41914cab97625722f78ee092a4",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/lib/features/privacy/personal_data_redactor.dart"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/test/personal_data_redactor_test.dart",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "6ab780a3665bf34dcbbf5670fdb17243e8588188",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/test/personal_data_redactor_test.dart"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/test/assistant_tool_policy_test.dart",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "dbdc54054b811a7da62b17fe9acb3c71a79c8070",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/test/assistant_tool_policy_test.dart"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/test/crash_explainer_test.cpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "dc2a387ee8511059eb141962c60d34d3ac3df8d3",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/test/crash_explainer_test.cpp"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "docs/architecture/37-timeline-correlation-rules.md",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "90e0cf03b20b3934d62ddf7eb9fdaaacd7d002a7",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/docs/architecture/37-timeline-correlation-rules.md"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "LICENSE",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "e1a056fd89ab386343e58f0c3ddd9c8a13fa191b",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/LICENSE"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.Hardware/PC-AI.Hardware.psd1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "09dfeb879f4d969ebbb91aacbb756c510edecc7f",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.Hardware/PC-AI.Hardware.psd1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.Hardware/PC-AI.Hardware.psm1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "b2e23b948cac9417271317ffc2c5d7f7b29b7508",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.Hardware/PC-AI.Hardware.psm1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.Hardware/Public/Get-SystemEvents.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "3061b80390b6c6f37b501d5453d033d20d4e1e05",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.Hardware/Public/Get-SystemEvents.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.Hardware/Public/Get-DiskHealth.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "3d972fbd93fc33f2fcfd277d43a7b7b9f6e3a736",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.Hardware/Public/Get-DiskHealth.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.Hardware/Public/Get-DeviceErrors.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "ed31bb7aa35adcd0416fb35d762926b5975571d8",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.Hardware/Public/Get-DeviceErrors.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.Hardware/Public/Get-UsbStatus.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "f40d2b66cf3e0e8887ef7c5250272b5924918c7e",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.Hardware/Public/Get-UsbStatus.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.Hardware/Public/New-DiagnosticReport.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "1ede1a840db0aa0e51f416142775325eb9e1a913",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.Hardware/Public/New-DiagnosticReport.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.LLM/Private/Validate-ToolParameters.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "f9ca60b928230e48f0f685a86a3caeb75970fb7c",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.LLM/Private/Validate-ToolParameters.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Config/pcai-tools.json",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "81e2c40cca7f6711bff7ad297e246a98f08e6b4c",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Config/pcai-tools.json"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.LLM/Public/Invoke-LLMChatRouted.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "f945287f8eb220dd2d15fcd0354ca4085897b130",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.LLM/Public/Invoke-LLMChatRouted.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.LLM/Public/Invoke-FunctionGemmaReAct.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "2320a0b0aa4d856c4d0ce24810123e4b31c42b81",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.LLM/Public/Invoke-FunctionGemmaReAct.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.LLM/Public/Invoke-SmartDiagnosis.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "92e550bf8290690922e539403ecc0a33993c4dae",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.LLM/Public/Invoke-SmartDiagnosis.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Tests/Unit/PC-AI.Hardware.Tests.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "7d16bd3d7fad3a0dbf7dc1cb8b7d6f7e610eec07",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Tests/Unit/PC-AI.Hardware.Tests.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Tests/Unit/Validate-ToolParameters.Tests.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "e9d1d3392a11ea8a18153308b63d35d9b041ac79",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Tests/Unit/Validate-ToolParameters.Tests.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Tests/Unit/Invoke-LLMChatRouted.Tests.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "8370a9b9b2a017f10b912d6ce703ed49b7d2a8f4",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Tests/Unit/Invoke-LLMChatRouted.Tests.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Tools/InputDiagnostics/Get-KeyboardDiagnosticSnapshot.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "63ee7b3abf976ee466b7325049248a9c6399b0f7",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Tools/InputDiagnostics/Get-KeyboardDiagnosticSnapshot.ps1"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/lib/features/timeline/timeline_incident_engine.dart",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "6b4e20ac8c7e06109693c583c1a15c99e307f12b",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/lib/features/timeline/timeline_incident_engine.dart"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "apps/pulse_app/test/timeline_incident_engine_test.dart",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "e06483c00ef8087796ad869f0a5d89ae7713fc4f",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/apps/pulse_app/test/timeline_incident_engine_test.dart"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/src/intelligence/crash_explainer.hpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "46abc7e55806d3952d409dde8e659cc00fef330c",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/src/intelligence/crash_explainer.hpp"
+    },
+    {
+      "repository": "Regncreative/PulseDiagnostics",
+      "path": "service/pulse_service/src/intelligence/event_intelligence.hpp",
+      "commit": "682a3487328b1016e820ceef263b7417815edb01",
+      "gitBlobSha": "ea69ec0b554d402df0a0757de4c844dfb6d5670e",
+      "sourceUrl": "https://github.com/Regncreative/PulseDiagnostics/blob/682a3487328b1016e820ceef263b7417815edb01/service/pulse_service/src/intelligence/event_intelligence.hpp"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.LLM/Private/LLM-Helpers.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "d10e4c2a8312d041c18bd6f9ba93cfc8b1b6df78",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.LLM/Private/LLM-Helpers.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Native/PcaiNative/ToolExecutor.cs",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "ad616a95a60387574f17e067026729ca97cd4339",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Native/PcaiNative/ToolExecutor.cs"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Native/pcai_core/pcai_core_lib/src/telemetry/disk_health.rs",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "00b2db766b875f9bf2ea570f171776a89e6b47ca",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Native/pcai_core/pcai_core_lib/src/telemetry/disk_health.rs"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Config/DIAGNOSE_TEMPLATE.json",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "fefc71538330bc407dd1896feb050f625918c2ce",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Config/DIAGNOSE_TEMPLATE.json"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.LLM/Private/ConvertFrom-LLMJson.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "b5c4d5d993d459ad15e1cb863e8ff1507e138140",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.LLM/Private/ConvertFrom-LLMJson.ps1"
+    },
+    {
+      "repository": "David-Martel/PC-AI",
+      "path": "Modules/PC-AI.Hardware/Private/Format-Helpers.ps1",
+      "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+      "gitBlobSha": "f30e27427a8a9b623838aab250818ad5558655fa",
+      "sourceUrl": "https://github.com/David-Martel/PC-AI/blob/465518eeb4db6ba52d52654fc6229b5970041a42/Modules/PC-AI.Hardware/Private/Format-Helpers.ps1"
+    }
+  ]
+}

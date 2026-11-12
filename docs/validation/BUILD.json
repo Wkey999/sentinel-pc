@@ -1,0 +1,14 @@
+{
+  "version": "0.1.0",
+  "builtOn": "2026-11-12",
+  "target": "x86_64-pc-windows-msvc",
+  "profile": "debug",
+  "embeddedFrontend": true,
+  "file": "target/debug/sentinel-pc.exe",
+  "bytes": 18317312,
+  "sha256": "4B96EBD9FB4C28135C45CE9205FDE9C450C92EC89A27D7876B2C1241932D7F91",
+  "signature": "NotSigned",
+  "installer": false,
+  "realCollection": false,
+  "modelEnabled": false
+}

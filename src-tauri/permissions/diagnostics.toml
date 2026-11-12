@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-diagnostics"
+description = "Main window may manage synthetic diagnostic cases using bounded semantic commands."
+commands.allow = ["get_app_status", "create_case", "get_case", "list_cases", "build_plan", "approve_plan", "start_plan", "export_case", "delete_case"]

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-11-12",
+  "upstream": "David-Martel/PC-AI",
+  "commit": "465518eeb4db6ba52d52654fc6229b5970041a42",
+  "runtime": "PowerShell 7.6.9",
+  "scope": "Isolated function checks using synthetic inputs; event and device access mocked",
+  "notVerified": [
+    "PowerShell 5.1 compatibility",
+    "Full upstream test suites",
+    "Installed application behavior",
+    "Actual hardware diagnosis",
+    "Model inference"
+  ],
+  "observations": [
+    {
+      "id": "R01",
+      "subject": "unknown_field_with_additionalProperties_false",
+      "actualIsValid": true,
+      "requiredBySentinel": "reject"
+    },
+    {
+      "id": "R02",
+      "subject": "integer_over_schema_maximum",
+      "actualIsValid": true,
+      "requiredBySentinel": "reject"
+    },
+    {
+      "id": "R03",
+      "subject": "missing_required_nested_field",
+      "actualIsValid": true,
+      "requiredBySentinel": "reject"
+    },
+    {
+      "id": "R04",
+      "subject": "usb_catalog_parameter_matches_actual_function",
+      "mappedParameter": "ErrorsOnly",
+      "actualFilterParameter": "OnlyErrors",
+      "mappingIsValid": false
+    },
+    {
+      "id": "R05",
+      "subject": "multi_row_tool_output_is_json",
+      "actualJsonValid": false,
+      "expectedRows": 2,
+      "decodedRows": 0,
+      "actualOutput": " "
+    },
+    {
+      "id": "R06",
+      "subject": "localized_no_events_error",
+      "englishRows": 0,
+      "chineseRows": 0,
+      "englishOuterFailure": false,
+      "chineseOuterFailure": true
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+[build]
+# On this Windows toolchain, concurrent compilation produced metadata/ICE failures.
+# A single build job passed the same dependency build; keep the baseline reproducible.
+jobs = 1

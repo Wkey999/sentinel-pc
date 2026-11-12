@@ -1,0 +1,9 @@
+{
+  "json_format_version": [1, 0],
+  "smartctl": { "version": [7, 5], "exit_status": 0 },
+  "device": { "protocol": "NVMe", "type": "nvme" },
+  "model_name": "SYNTHETIC NVME SSD",
+  "serial_number": "SYNTHETIC-NVME-001",
+  "smart_status": { "passed": true },
+  "nvme_smart_health_information_log": { "critical_warning": 0, "temperature": 35 }
+}

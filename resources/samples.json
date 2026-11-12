@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "provenance": "synthetic",
+  "scenarios": [
+    {
+      "id": "restart",
+      "title": "游戏时突然重启",
+      "description": "合成 Kernel-Power 41；仅能观察到未正常关机。",
+      "coverage": [
+        {
+          "source": "System 事件样本",
+          "status": "available",
+          "detail": "1 条合成事件，不是本机采集"
+        },
+        {
+          "source": "错误检查详情",
+          "status": "missing",
+          "detail": "没有提供转储或可用错误检查信息"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "ev-restart-41",
+          "kind": "windows.event",
+          "source": "synthetic/system-events.json",
+          "observedAtUtc": "2026-11-12T02:03:00Z",
+          "provider": "Microsoft-Windows-Kernel-Power",
+          "channel": "System",
+          "eventId": 41,
+          "schemaVersion": 0,
+          "recordId": 101,
+          "entity": "SYNTHETIC-PC",
+          "bootSession": "boot-1",
+          "fields": { "BugcheckCode": "0" }
+        }
+      ]
+    },
+    {
+      "id": "application",
+      "title": "游戏闪退到桌面",
+      "description": "同一个应用的崩溃与 WER 合成记录，展示身份约束关联。",
+      "coverage": [
+        {
+          "source": "Application 事件样本",
+          "status": "available",
+          "detail": "2 条合成事件，已声明同一程序/启动会话"
+        },
+        {
+          "source": "硬件与驱动状态",
+          "status": "missing",
+          "detail": "本轮没有采集，不能排除硬件或驱动因素"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "ev-app-1000",
+          "kind": "windows.event",
+          "source": "synthetic/application-events.json",
+          "observedAtUtc": "2026-11-12T02:03:00Z",
+          "provider": "Application Error",
+          "channel": "Application",
+          "eventId": 1000,
+          "schemaVersion": 0,
+          "recordId": 201,
+          "entity": "example-game.exe",
+          "bootSession": "boot-1",
+          "fields": { "module": "ntdll.dll", "exceptionCode": "0xc0000005" }
+        },
+        {
+          "id": "ev-app-1001",
+          "kind": "windows.event",
+          "source": "synthetic/application-events.json",
+          "observedAtUtc": "2026-11-12T02:03:12Z",
+          "provider": "Windows Error Reporting",
+          "channel": "Application",
+          "eventId": 1001,
+          "schemaVersion": 0,
+          "recordId": 202,
+          "entity": "example-game.exe",
+          "bootSession": "boot-1",
+          "fields": { "reportType": "APPCRASH" }
+        }
+      ]
+    },
+    {
+      "id": "storage",
+      "title": "磁盘报告有告警",
+      "description": "统一证据形状的合成存储告警；尚未经过 smartctl/CDI 真实格式 Parser。",
+      "coverage": [
+        {
+          "source": "存储健康证据样本",
+          "status": "available",
+          "detail": "合成的已标准化证据，不代表任何磁盘实测"
+        },
+        {
+          "source": "第三方报告格式",
+          "status": "unsupported",
+          "detail": "尚未实现真实 CrystalDiskInfo / smartctl 导入"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "ev-storage-1",
+          "kind": "storage.health",
+          "source": "synthetic/storage-health.json",
+          "observedAtUtc": null,
+          "provider": null,
+          "channel": null,
+          "eventId": null,
+          "schemaVersion": null,
+          "recordId": null,
+          "entity": "DEMO-DISK-1",
+          "bootSession": null,
+          "fields": {
+            "declaredHealth": "failed",
+            "model": "Synthetic SSD",
+            "serialNumber": "SN-DEMO-001",
+            "toolExitStatus": "8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "title": "没有相关事件",
+      "description": "查询结果为空的合成情形；没有记录不代表没有故障。",
+      "coverage": [
+        {
+          "source": "System / Application 样本",
+          "status": "empty",
+          "detail": "合成查询成功，返回 0 条记录；不代表硬件正常"
+        },
+        { "source": "外部报告", "status": "missing", "detail": "没有提供" }
+      ],
+      "evidence": []
+    },
+    {
+      "id": "insufficient",
+      "title": "资料不足与权限拒绝",
+      "description": "展示拒绝访问、截断和未知项，模型关闭仍输出规则报告。",
+      "coverage": [
+        {
+          "source": "System 事件样本",
+          "status": "permission_denied",
+          "detail": "模拟权限不足，不是本机权限检测"
+        },
+        {
+          "source": "Application 事件样本",
+          "status": "truncated",
+          "detail": "模拟输出截断，无法视为完整覆盖"
+        },
+        { "source": "传感器报告", "status": "missing", "detail": "没有提供" }
+      ],
+      "evidence": []
+    }
+  ]
+}

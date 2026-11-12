@@ -1,0 +1,7 @@
+{
+  "identifier": "main-diagnostics",
+  "description": "Only the local main window has semantic diagnostic access.",
+  "local": true,
+  "windows": ["main"],
+  "permissions": ["allow-diagnostics"]
+}

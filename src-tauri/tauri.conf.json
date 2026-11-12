@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Sentinel PC",
+  "version": "0.1.0",
+  "identifier": "local.sentinelpc.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Sentinel PC · 哨兵（离线预览）",
+        "width": 1180,
+        "height": 820,
+        "minWidth": 640,
+        "minHeight": 480
+      }
+    ],
+    "security": {
+      "capabilities": ["main-diagnostics"],
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'",
+      "devCsp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src ipc: http://ipc.localhost http://127.0.0.1:1420 ws://127.0.0.1:1420; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'"
+    }
+  },
+  "bundle": { "active": false, "targets": ["nsis"] }
+}

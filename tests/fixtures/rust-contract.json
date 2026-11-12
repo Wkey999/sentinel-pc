@@ -1,0 +1,411 @@
+[
+  {
+    "id": "d4f7489f-9fe6-4f4f-b58a-b19a4cbfc40f",
+    "title": "游戏时突然重启",
+    "symptom": "合成契约样例",
+    "scenarioId": "restart",
+    "incidentStartUtc": "2026-11-12T01:53:00Z",
+    "incidentEndUtc": "2026-11-12T02:13:00Z",
+    "displayTimezone": "Asia/Hong_Kong",
+    "environment": "personal",
+    "createdAtUtc": "2026-11-12T10:50:35.844486300+00:00",
+    "status": "completed_partial",
+    "plan": {
+      "id": "6f6e6406-d350-4f4c-8f68-e92b24655888",
+      "caseId": "d4f7489f-9fe6-4f4f-b58a-b19a4cbfc40f",
+      "revision": 1,
+      "hash": "9b769b071762a4809362dd0b61dd51acea92957a9e1d65e68f50846e494ce9fe",
+      "actionIds": [
+        "demo.analyze_fixture"
+      ],
+      "dataScopes": [
+        "仅内置合成样本；不采集本机数据；不联网"
+      ],
+      "policyVersion": "preview-0.1.0",
+      "adapterVersion": "synthetic-0.1.0",
+      "scenarioId": "restart",
+      "incidentStartUtc": "2026-11-12T01:53:00Z",
+      "incidentEndUtc": "2026-11-12T02:13:00Z"
+    },
+    "report": {
+      "schemaVersion": 1,
+      "provenance": "synthetic",
+      "ruleVersion": "preview-0.1.0",
+      "generatedAtUtc": "2026-11-12T10:50:35.845094200+00:00",
+      "findings": [
+        {
+          "id": "finding-WIN-RESTART-001-ev-restart-41",
+          "ruleId": "WIN-RESTART-001",
+          "title": "记录到未正常关机后的启动事件",
+          "observation": "样本中存在 Kernel-Power 41。它描述未正常关机后的启动情况，不能单独定位原因。",
+          "evidenceIds": [
+            "ev-restart-41"
+          ],
+          "strength": "对记录内容较强；对根因不足",
+          "limitations": [
+            "不能仅凭这条事件判断电源、主板或 CPU 损坏。",
+            "BugcheckCode 为 0 也不能排除所有故障。"
+          ],
+          "nextStep": "先确认当时是否长按电源、断电或蓝屏，再补充同一时间段的记录。"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "ev-restart-41",
+          "kind": "windows.event",
+          "source": "synthetic/system-events.json",
+          "observedAtUtc": "2026-11-12T02:03:00Z",
+          "provider": "Microsoft-Windows-Kernel-Power",
+          "channel": "System",
+          "eventId": 41,
+          "schemaVersion": 0,
+          "recordId": 101,
+          "entity": "SYNTHETIC-PC",
+          "bootSession": "boot-1",
+          "fields": {
+            "BugcheckCode": "0"
+          }
+        }
+      ],
+      "coverage": [
+        {
+          "source": "System 事件样本",
+          "status": "available",
+          "detail": "1 条合成事件，不是本机采集"
+        },
+        {
+          "source": "错误检查详情",
+          "status": "missing",
+          "detail": "没有提供转储或可用错误检查信息"
+        }
+      ],
+      "unknowns": [
+        "这些是合成样本，不能用于判断当前电脑的健康或故障根因。",
+        "错误检查详情：没有提供转储或可用错误检查信息"
+      ]
+    }
+  },
+  {
+    "id": "62d8368b-6dc6-4928-8927-bb82a820799e",
+    "title": "游戏闪退到桌面",
+    "symptom": "合成契约样例",
+    "scenarioId": "application",
+    "incidentStartUtc": "2026-11-12T01:53:00Z",
+    "incidentEndUtc": "2026-11-12T02:13:00Z",
+    "displayTimezone": "Asia/Hong_Kong",
+    "environment": "personal",
+    "createdAtUtc": "2026-11-12T10:50:35.845234200+00:00",
+    "status": "completed_partial",
+    "plan": {
+      "id": "40fe99c2-8453-4e9e-873d-4001806e9974",
+      "caseId": "62d8368b-6dc6-4928-8927-bb82a820799e",
+      "revision": 1,
+      "hash": "638d15838a8ecf99bd0b1a23b362e5a90d651639019918eec55c03ecfbc63be4",
+      "actionIds": [
+        "demo.analyze_fixture"
+      ],
+      "dataScopes": [
+        "仅内置合成样本；不采集本机数据；不联网"
+      ],
+      "policyVersion": "preview-0.1.0",
+      "adapterVersion": "synthetic-0.1.0",
+      "scenarioId": "application",
+      "incidentStartUtc": "2026-11-12T01:53:00Z",
+      "incidentEndUtc": "2026-11-12T02:13:00Z"
+    },
+    "report": {
+      "schemaVersion": 1,
+      "provenance": "synthetic",
+      "ruleVersion": "preview-0.1.0",
+      "generatedAtUtc": "2026-11-12T10:50:35.845628800+00:00",
+      "findings": [
+        {
+          "id": "finding-WIN-APP-001-ev-app-1000",
+          "ruleId": "WIN-APP-001",
+          "title": "应用存在异常记录",
+          "observation": "样本记录了应用异常；故障模块是记录中的线索，不能直接当作根因。",
+          "evidenceIds": [
+            "ev-app-1000"
+          ],
+          "strength": "对记录内容较强；对根因不足",
+          "limitations": [
+            "ntdll.dll 等系统模块可能只是故障表现。",
+            "本轮没有排除驱动、插件、应用代码或硬件因素。"
+          ],
+          "nextStep": "记录程序版本和近期变更；先按一个变量复测，不随意替换系统 DLL。"
+        },
+        {
+          "id": "finding-TIMELINE-APP-001-ev-app-1000-ev-app-1001",
+          "ruleId": "TIMELINE-APP-001",
+          "title": "两条记录符合受限关联条件",
+          "observation": "同一来源中，同一应用和启动会话的 WER 记录在异常事件后 120 秒内出现，可并列查看。",
+          "evidenceIds": [
+            "ev-app-1000",
+            "ev-app-1001"
+          ],
+          "strength": "对记录内容较强；对根因不足",
+          "limitations": [
+            "样本中声明的实体身份与时间关联不证明故障因果。",
+            "当前只支持合成样本 schema 0，不代表实际 Windows 版本的格式已验收。"
+          ],
+          "nextStep": "结合两条记录查看程序身份、异常代码和复现场景。"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "ev-app-1000",
+          "kind": "windows.event",
+          "source": "synthetic/application-events.json",
+          "observedAtUtc": "2026-11-12T02:03:00Z",
+          "provider": "Application Error",
+          "channel": "Application",
+          "eventId": 1000,
+          "schemaVersion": 0,
+          "recordId": 201,
+          "entity": "example-game.exe",
+          "bootSession": "boot-1",
+          "fields": {
+            "exceptionCode": "0xc0000005",
+            "module": "ntdll.dll"
+          }
+        },
+        {
+          "id": "ev-app-1001",
+          "kind": "windows.event",
+          "source": "synthetic/application-events.json",
+          "observedAtUtc": "2026-11-12T02:03:12Z",
+          "provider": "Windows Error Reporting",
+          "channel": "Application",
+          "eventId": 1001,
+          "schemaVersion": 0,
+          "recordId": 202,
+          "entity": "example-game.exe",
+          "bootSession": "boot-1",
+          "fields": {
+            "reportType": "APPCRASH"
+          }
+        }
+      ],
+      "coverage": [
+        {
+          "source": "Application 事件样本",
+          "status": "available",
+          "detail": "2 条合成事件，已声明同一程序/启动会话"
+        },
+        {
+          "source": "硬件与驱动状态",
+          "status": "missing",
+          "detail": "本轮没有采集，不能排除硬件或驱动因素"
+        }
+      ],
+      "unknowns": [
+        "这些是合成样本，不能用于判断当前电脑的健康或故障根因。",
+        "硬件与驱动状态：本轮没有采集，不能排除硬件或驱动因素"
+      ]
+    }
+  },
+  {
+    "id": "4c8058ae-d6aa-4b71-90b7-95045e07cd4e",
+    "title": "磁盘报告有告警",
+    "symptom": "合成契约样例",
+    "scenarioId": "storage",
+    "incidentStartUtc": "2026-11-12T01:53:00Z",
+    "incidentEndUtc": "2026-11-12T02:13:00Z",
+    "displayTimezone": "Asia/Hong_Kong",
+    "environment": "personal",
+    "createdAtUtc": "2026-11-12T10:50:35.845837700+00:00",
+    "status": "completed_partial",
+    "plan": {
+      "id": "314886b7-ebb4-4232-9fce-aa6757acc5bb",
+      "caseId": "4c8058ae-d6aa-4b71-90b7-95045e07cd4e",
+      "revision": 1,
+      "hash": "6728748c2ad4c8d5d36ae1a9f137c4955d57695b3e4fd1556f54669dbd01f184",
+      "actionIds": [
+        "demo.analyze_fixture"
+      ],
+      "dataScopes": [
+        "仅内置合成样本；不采集本机数据；不联网"
+      ],
+      "policyVersion": "preview-0.1.0",
+      "adapterVersion": "synthetic-0.1.0",
+      "scenarioId": "storage",
+      "incidentStartUtc": "2026-11-12T01:53:00Z",
+      "incidentEndUtc": "2026-11-12T02:13:00Z"
+    },
+    "report": {
+      "schemaVersion": 1,
+      "provenance": "synthetic",
+      "ruleVersion": "preview-0.1.0",
+      "generatedAtUtc": "2026-11-12T10:50:35.846290+00:00",
+      "findings": [
+        {
+          "id": "finding-STORAGE-001-ev-storage-1",
+          "ruleId": "STORAGE-001",
+          "title": "样本声明了存储健康告警",
+          "observation": "合成报告证据中 declaredHealth 为 failed；这是报告声明，不是本产品实测。",
+          "evidenceIds": [
+            "ev-storage-1"
+          ],
+          "strength": "对记录内容较强；对根因不足",
+          "limitations": [
+            "尚未完成真实 smartctl 或 CrystalDiskInfo 格式验收。",
+            "没有测试时间，不能把它关联到本次闪退，也不能预测损坏时间。"
+          ],
+          "nextStep": "若真实报告出现类似告警，先备份重要资料，再用受支持来源核实，避免自动运行长测。"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "ev-storage-1",
+          "kind": "storage.health",
+          "source": "synthetic/storage-health.json",
+          "observedAtUtc": null,
+          "provider": null,
+          "channel": null,
+          "eventId": null,
+          "schemaVersion": null,
+          "recordId": null,
+          "entity": "DEMO-DISK-1",
+          "bootSession": null,
+          "fields": {
+            "declaredHealth": "failed",
+            "model": "Synthetic SSD",
+            "serialNumber": "SN-DEMO-001",
+            "toolExitStatus": "8"
+          }
+        }
+      ],
+      "coverage": [
+        {
+          "source": "存储健康证据样本",
+          "status": "available",
+          "detail": "合成的已标准化证据，不代表任何磁盘实测"
+        },
+        {
+          "source": "第三方报告格式",
+          "status": "unsupported",
+          "detail": "尚未实现真实 CrystalDiskInfo / smartctl 导入"
+        }
+      ],
+      "unknowns": [
+        "这些是合成样本，不能用于判断当前电脑的健康或故障根因。",
+        "第三方报告格式：尚未实现真实 CrystalDiskInfo / smartctl 导入"
+      ]
+    }
+  },
+  {
+    "id": "947f0c53-df89-4d11-b5be-f6a6bd0da91b",
+    "title": "没有相关事件",
+    "symptom": "合成契约样例",
+    "scenarioId": "empty",
+    "incidentStartUtc": "2026-11-12T01:53:00Z",
+    "incidentEndUtc": "2026-11-12T02:13:00Z",
+    "displayTimezone": "Asia/Hong_Kong",
+    "environment": "personal",
+    "createdAtUtc": "2026-11-12T10:50:35.846460200+00:00",
+    "status": "completed_partial",
+    "plan": {
+      "id": "72e7ab05-1bcd-44e1-92bf-acf8fc1f8d6b",
+      "caseId": "947f0c53-df89-4d11-b5be-f6a6bd0da91b",
+      "revision": 1,
+      "hash": "4366e74c7f912e9d0a4ed5052b1d38bd2ac32cfacd19fbea3dabaa1be87c4f9b",
+      "actionIds": [
+        "demo.analyze_fixture"
+      ],
+      "dataScopes": [
+        "仅内置合成样本；不采集本机数据；不联网"
+      ],
+      "policyVersion": "preview-0.1.0",
+      "adapterVersion": "synthetic-0.1.0",
+      "scenarioId": "empty",
+      "incidentStartUtc": "2026-11-12T01:53:00Z",
+      "incidentEndUtc": "2026-11-12T02:13:00Z"
+    },
+    "report": {
+      "schemaVersion": 1,
+      "provenance": "synthetic",
+      "ruleVersion": "preview-0.1.0",
+      "generatedAtUtc": "2026-11-12T10:50:35.846821200+00:00",
+      "findings": [],
+      "evidence": [],
+      "coverage": [
+        {
+          "source": "System / Application 样本",
+          "status": "empty",
+          "detail": "合成查询成功，返回 0 条记录；不代表硬件正常"
+        },
+        {
+          "source": "外部报告",
+          "status": "missing",
+          "detail": "没有提供"
+        }
+      ],
+      "unknowns": [
+        "这些是合成样本，不能用于判断当前电脑的健康或故障根因。",
+        "本轮没有足够的匹配证据；没有记录不代表没有故障。",
+        "外部报告：没有提供"
+      ]
+    }
+  },
+  {
+    "id": "4ccbfbd8-268e-4114-8f02-a50b96601915",
+    "title": "资料不足与权限拒绝",
+    "symptom": "合成契约样例",
+    "scenarioId": "insufficient",
+    "incidentStartUtc": "2026-11-12T01:53:00Z",
+    "incidentEndUtc": "2026-11-12T02:13:00Z",
+    "displayTimezone": "Asia/Hong_Kong",
+    "environment": "personal",
+    "createdAtUtc": "2026-11-12T10:50:35.846948300+00:00",
+    "status": "completed_partial",
+    "plan": {
+      "id": "cc584abb-e4f3-4550-89e1-74d1ee509f85",
+      "caseId": "4ccbfbd8-268e-4114-8f02-a50b96601915",
+      "revision": 1,
+      "hash": "373e76a0553e6549529a67fbc0d92122d69c5c2b9fd57f35799a2fe6f04ed08f",
+      "actionIds": [
+        "demo.analyze_fixture"
+      ],
+      "dataScopes": [
+        "仅内置合成样本；不采集本机数据；不联网"
+      ],
+      "policyVersion": "preview-0.1.0",
+      "adapterVersion": "synthetic-0.1.0",
+      "scenarioId": "insufficient",
+      "incidentStartUtc": "2026-11-12T01:53:00Z",
+      "incidentEndUtc": "2026-11-12T02:13:00Z"
+    },
+    "report": {
+      "schemaVersion": 1,
+      "provenance": "synthetic",
+      "ruleVersion": "preview-0.1.0",
+      "generatedAtUtc": "2026-11-12T10:50:35.847353300+00:00",
+      "findings": [],
+      "evidence": [],
+      "coverage": [
+        {
+          "source": "System 事件样本",
+          "status": "permission_denied",
+          "detail": "模拟权限不足，不是本机权限检测"
+        },
+        {
+          "source": "Application 事件样本",
+          "status": "truncated",
+          "detail": "模拟输出截断，无法视为完整覆盖"
+        },
+        {
+          "source": "传感器报告",
+          "status": "missing",
+          "detail": "没有提供"
+        }
+      ],
+      "unknowns": [
+        "这些是合成样本，不能用于判断当前电脑的健康或故障根因。",
+        "本轮没有足够的匹配证据；没有记录不代表没有故障。",
+        "System 事件样本：模拟权限不足，不是本机权限检测",
+        "Application 事件样本：模拟输出截断，无法视为完整覆盖",
+        "传感器报告：没有提供"
+      ]
+    }
+  }
+]

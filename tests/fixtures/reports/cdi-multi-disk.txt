@@ -1,0 +1,32 @@
+----------------------------------------------------------------------------
+CrystalDiskInfo 9.6.0 (C) synthetic fixture, not a real tool report
+----------------------------------------------------------------------------
+
+    OS : Synthetic Windows
+  Date : 2026/11/12 10:03:00
+
+-- Disk List ---------------------------------------------------------------
+ (01) SYNTHETIC SAME MODEL : 500 GB
+ (02) SYNTHETIC SAME MODEL : 500 GB
+
+----------------------------------------------------------------------------
+ (01) SYNTHETIC SAME MODEL
+----------------------------------------------------------------------------
+           Model : SYNTHETIC SAME MODEL
+        Firmware : DEMO1
+   Serial Number : SYNTHETIC-DISK-1
+       Interface : Serial ATA
+     Temperature : 32 C (89 F)
+   Health Status : Good (100 %)
+
+-- S.M.A.R.T. ---------------------------------------------------------------
+ID Cur Wor Thr RawValues(6) Attribute Name
+05 100 100 _10 000000000000 Synthetic Attribute
+
+----------------------------------------------------------------------------
+ (02) SYNTHETIC SAME MODEL
+----------------------------------------------------------------------------
+           Model : SYNTHETIC SAME MODEL
+   Serial Number : SYNTHETIC-DISK-2
+       Interface : NVM Express
+   Health Status : Bad (5 %)

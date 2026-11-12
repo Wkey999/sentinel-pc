@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "provenance": "synthetic",
+  "ruleVersion": "preview-0.1.0",
+  "generatedAtUtc": "2026-11-12T10:55:49.149Z",
+  "findings": [
+    {
+      "id": "finding-STORAGE-001-ev-storage-1",
+      "ruleId": "STORAGE-001",
+      "title": "样本声明了存储健康告警",
+      "observation": "合成报告证据中 declaredHealth 为 failed；这是报告声明，不是本产品实测。",
+      "evidenceIds": [
+        "ev-storage-1"
+      ],
+      "strength": "对记录内容较强；对根因不足",
+      "limitations": [
+        "尚未完成真实 smartctl 或 CrystalDiskInfo 格式验收。",
+        "没有测试时间，不能把它关联到本次闪退，也不能预测损坏时间。"
+      ],
+      "nextStep": "若真实报告出现类似告警，先备份重要资料，再用受支持来源核实，避免自动运行长测。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-storage-1",
+      "kind": "storage.health",
+      "source": "synthetic/storage-health.json",
+      "observedAtUtc": null,
+      "provider": null,
+      "channel": null,
+      "eventId": null,
+      "schemaVersion": null,
+      "recordId": null,
+      "entity": "DEMO-DISK-1",
+      "bootSession": null,
+      "fields": {
+        "declaredHealth": "failed",
+        "model": "Synthetic SSD",
+        "serialNumber": "REDACTED_1",
+        "toolExitStatus": "8"
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "source": "存储健康证据样本",
+      "status": "available",
+      "detail": "合成的已标准化证据，不代表任何磁盘实测"
+    },
+    {
+      "source": "第三方报告格式",
+      "status": "unsupported",
+      "detail": "尚未实现真实 CrystalDiskInfo / smartctl 导入"
+    }
+  ],
+  "unknowns": [
+    "这些是合成样本，不能用于判断当前电脑的健康或故障根因。",
+    "第三方报告格式：尚未实现真实 CrystalDiskInfo / smartctl 导入"
+  ]
+}

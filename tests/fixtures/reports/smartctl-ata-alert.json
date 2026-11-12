@@ -1,0 +1,9 @@
+{
+  "json_format_version": [1, 0],
+  "smartctl": { "version": [7, 4], "exit_status": 8 },
+  "device": { "protocol": "ATA", "type": "sat" },
+  "model_name": "SYNTHETIC SATA SSD",
+  "serial_number": "SYNTHETIC-ATA-001",
+  "smart_status": { "passed": false },
+  "local_time": { "time_t": 1794448980 }
+}
