@@ -19,12 +19,27 @@ describe("最小权限工程配置", () => {
   });
   it("应用命令纳入 AppManifest，并在后端复核窗口身份", () => {
     const build = readFileSync("src-tauri/build.rs", "utf8"),
-      backend = readFileSync("src-tauri/src/lib.rs", "utf8");
-    const names = [...backend.matchAll(/#\[tauri::command\]\s*fn (\w+)/g)].map(
-      (m) => m[1]!,
-    );
-    expect(names).toHaveLength(9);
-    for (const name of names) expect(build).toContain(`"${name}"`);
+      backend = readFileSync("src-tauri/src/lib.rs", "utf8"),
+      permissions = readFileSync(
+        "src-tauri/permissions/diagnostics.toml",
+        "utf8",
+      );
+    const names = [
+      ...backend.matchAll(/#\[tauri::command\]\s*(?:async\s+)?fn (\w+)/g),
+    ].map((m) => m[1]!);
+    expect(names).toHaveLength(26);
+    expect(names).toContain("create_setup_audit");
+    const manifestNames = [...build.matchAll(/"(\w+)"/g)].map((m) => m[1]!);
+    const allowedNames = [
+      ...permissions.split("commands.allow =")[1]!.matchAll(/"(\w+)"/g),
+    ].map((m) => m[1]!);
+    const handlers = backend
+      .split("tauri::generate_handler![")[1]!
+      .split("]")[0]!
+      .match(/\b\w+\b/g)!;
+    expect([...manifestNames].sort()).toEqual([...names].sort());
+    expect([...allowedNames].sort()).toEqual([...names].sort());
+    expect([...handlers].sort()).toEqual([...names].sort());
     expect((backend.match(/access\(&window\)\?/g) ?? []).length).toBe(
       names.length,
     );

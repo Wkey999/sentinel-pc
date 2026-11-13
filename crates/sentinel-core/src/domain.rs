@@ -52,12 +52,17 @@ pub fn catalog() -> SampleCatalog {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateCase {
+    #[serde(default)]
     pub scenario_id: String,
     pub symptom: String,
     pub incident_start_utc: String,
     pub incident_end_utc: String,
     pub display_timezone: String,
     pub environment: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<crate::diagnostics::Category>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interview: Option<crate::diagnostics::InterviewContext>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -74,6 +79,14 @@ pub struct Plan {
     pub scenario_id: String,
     pub incident_start_utc: String,
     pub incident_end_utc: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actions: Vec<crate::diagnostics::ActionSpec>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub run_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub artifact_hashes: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_identity: Option<crate::tools::ToolCandidate>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -100,6 +113,8 @@ pub struct Report {
     pub evidence: Vec<Evidence>,
     pub coverage: Vec<Coverage>,
     pub unknowns: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub audit_checks: Vec<crate::diagnostics::AuditCheckResult>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -117,6 +132,8 @@ pub struct CaseRecord {
     pub status: String,
     pub plan: Option<Plan>,
     pub report: Option<Report>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diagnostic: Option<crate::diagnostics::DiagnosticContext>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

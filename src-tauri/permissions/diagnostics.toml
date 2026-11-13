@@ -1,4 +1,4 @@
 [[permission]]
 identifier = "allow-diagnostics"
-description = "Main window may manage synthetic diagnostic cases using bounded semantic commands."
-commands.allow = ["get_app_status", "create_case", "get_case", "list_cases", "build_plan", "approve_plan", "start_plan", "export_case", "delete_case"]
+description = "Main window may manage bounded diagnostics, explicitly selected reports and confirmed read-only tools. No generic shell or filesystem access."
+commands.allow = ["get_app_status", "create_case", "create_setup_audit", "get_case", "list_cases", "build_plan", "approve_plan", "start_plan", "export_case", "delete_case", "get_backend_capabilities", "build_import_plan", "build_tool_plan", "cancel_run", "get_run", "update_interview", "set_run_window", "create_retest_run", "assist_interview", "explain_report", "probe_tools", "probe_storage_devices", "import_report", "list_artifacts", "configure_model", "clear_model"]

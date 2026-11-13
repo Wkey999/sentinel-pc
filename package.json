@@ -8,10 +8,10 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
-    "check": "vue-tsc --noEmit && vitest run",
+    "check": "tsc --noEmit && vitest run",
     "tauri": "tauri",
     "desktop:dev": "powershell -NoProfile -File scripts/desktop.ps1 dev",
     "desktop:build": "powershell -NoProfile -File scripts/desktop.ps1 build",
@@ -19,13 +19,23 @@
     "format": "prettier --write src tests/*.ts vite.config.ts && powershell -NoProfile -File scripts/format-rust.ps1"
   },
   "dependencies": {
+    "@astryxdesign/cli": "0.7.15",
+    "@astryxdesign/core": "0.7.15",
+    "@astryxdesign/theme-neutral": "0.7.15",
+    "@heroicons/react": "2.2.0",
+    "@stylexjs/stylex": "0.19.2",
     "@tauri-apps/api": "2.12.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "vue": "3.5.45",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.12.4",
     "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
     "@vitejs/plugin-vue": "6.0.11",
     "prettier": "3.10.1",
     "typescript": "6.0.3",

@@ -156,9 +156,19 @@ export class MockService {
   }
   async create(input: CreateCase): Promise<CaseRecord> {
     const r = createCaseSchema.parse(input);
-    const sample = samples.find((s) => s.id === r.scenarioId)!;
+    const resolvedScenarioId =
+      r.scenarioId ??
+      (r.category === "restart_bsod"
+        ? "restart"
+        : r.category === "storage_io"
+          ? "storage"
+          : r.category === "office_peripheral"
+            ? "empty"
+            : "application");
+    const sample = samples.find((s) => s.id === resolvedScenarioId)!;
     const c: CaseRecord = {
       ...r,
+      scenarioId: resolvedScenarioId,
       id: crypto.randomUUID(),
       title: sample.title,
       createdAtUtc: new Date().toISOString(),

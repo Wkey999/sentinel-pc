@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-explain-report"
+description = "Enables the explain_report command without any pre-configured scope."
+commands.allow = ["explain_report"]
+
+[[permission]]
+identifier = "deny-explain-report"
+description = "Denies the explain_report command without any pre-configured scope."
+commands.deny = ["explain_report"]

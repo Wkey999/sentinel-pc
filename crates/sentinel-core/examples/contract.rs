@@ -12,6 +12,8 @@ fn main() {
                 incident_end_utc: "2026-11-12T02:13:00Z".into(),
                 display_timezone: "Asia/Hong_Kong".into(),
                 environment: "personal".into(),
+                category: None,
+                interview: None,
             })
             .unwrap();
         let c = store.build_plan(&c.id).unwrap();

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-build-import-plan"
+description = "Enables the build_import_plan command without any pre-configured scope."
+commands.allow = ["build_import_plan"]
+
+[[permission]]
+identifier = "deny-build-import-plan"
+description = "Denies the build_import_plan command without any pre-configured scope."
+commands.deny = ["build_import_plan"]

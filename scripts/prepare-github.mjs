@@ -11,10 +11,14 @@ const names=execFileSync('git',['-c','core.excludesFile=','ls-files','-z','--cac
 const patterns=[/gh[pousr]_[A-Za-z0-9]{30,}/g,/github_pat_[A-Za-z0-9_]{30,}/g,/AKIA[A-Z0-9]{16}/g,/sk-[A-Za-z0-9_-]{32,}/g,/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g];
 const entries=[];
 const files=[];
+const deleted=[];
 for(const name of [...new Set(names)].sort()) {
   if(/^(?:\.git|\.tools|\.cache|node_modules|target|dist|private-reports|local-data)(?:\/|$)/.test(name)) throw Error(`Forbidden source path: ${name}`);
   if(/(?:^|\/)\.env(?:\.|$)|\.(?:exe|dll|pdb|dmp|sqlite|pem|key)$/i.test(name)) throw Error(`Forbidden source artifact: ${name}`);
-  const bytes=fs.readFileSync(path.join(root,name));
+  const source=path.join(root,name);
+  if(!fs.existsSync(source)){deleted.push(name);continue;}
+  if(!fs.lstatSync(source).isFile())throw Error(`Not a regular source file: ${name}`);
+  const bytes=fs.readFileSync(source);
   if(bytes.length>2*1024*1024) throw Error(`Unexpected large source file: ${name}`);
   const binary=/\.(png|ico)$/i.test(name);
   const sha=crypto.createHash('sha1').update(Buffer.from(`blob ${bytes.length}\0`)).update(bytes).digest('hex');
@@ -35,5 +39,5 @@ for(const e of entries.filter(e=>e.content!==undefined)) {
 if(batch.length)fs.writeFileSync(path.join(destination,`text-${count++}.json`),JSON.stringify(batch));
 const binaries=entries.filter(e=>e.base64!==undefined);
 fs.writeFileSync(path.join(destination,'binary.json'),JSON.stringify(binaries));
-fs.writeFileSync(path.join(destination,'manifest.json'),JSON.stringify({schemaVersion:1,repository:'Wkey999/sentinel-pc',textBatches:count,files},null,2));
-console.log(JSON.stringify({files:files.length,sourceBytes:files.reduce((n,f)=>n+f.bytes,0),textBatches:count,binaries:binaries.map(f=>({path:f.path,sha:f.sha})),credentialPatterns:'no matches'},null,2));
+fs.writeFileSync(path.join(destination,'manifest.json'),JSON.stringify({schemaVersion:1,repository:'Wkey999/sentinel-pc',textBatches:count,deleted,files},null,2));
+console.log(JSON.stringify({files:files.length,sourceBytes:files.reduce((n,f)=>n+f.bytes,0),textBatches:count,deleted,binaries:binaries.map(f=>({path:f.path,sha:f.sha})),credentialPatterns:'no matches'},null,2));

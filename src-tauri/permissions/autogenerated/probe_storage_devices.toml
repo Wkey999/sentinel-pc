@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-probe-storage-devices"
+description = "Enables the probe_storage_devices command without any pre-configured scope."
+commands.allow = ["probe_storage_devices"]
+
+[[permission]]
+identifier = "deny-probe-storage-devices"
+description = "Denies the probe_storage_devices command without any pre-configured scope."
+commands.deny = ["probe_storage_devices"]

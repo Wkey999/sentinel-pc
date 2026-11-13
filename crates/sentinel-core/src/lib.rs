@@ -1,4 +1,14 @@
+pub mod artifacts;
+mod calibrated_store;
+pub mod collectors;
+pub mod diagnostics;
 pub mod domain;
+pub mod gateway;
+pub mod provider;
+pub mod runner;
+pub mod tools;
+pub use calibrated_store::{BeginRun, WorkPackage};
+pub mod execution;
 mod export;
 pub mod parsers;
 pub mod rules;
@@ -12,6 +22,8 @@ use uuid::Uuid;
 pub type Result<T> = std::result::Result<T, String>;
 pub struct Store {
     conn: Connection,
+    artifact_root: Option<std::path::PathBuf>,
+    _instance_lock: Option<std::fs::File>,
 }
 
 fn storage_error(_: rusqlite::Error) -> String {
@@ -29,6 +41,12 @@ fn validate_id(id: &str) -> Result<()> {
         .map_err(|_| "案例 ID 无效。".into())
 }
 fn validate_request(r: &CreateCase) -> Result<()> {
+    if let Some(context) = &r.interview {
+        gateway::validate_interview(context)?;
+    }
+    if r.category.is_some() && !r.scenario_id.is_empty() {
+        return Err("真实分类与演示场景不能同时指定。".into());
+    }
     if r.symptom.trim().is_empty() || r.symptom.chars().count() > 1000 {
         return Err("请填写 1–1000 字的问题描述。".into());
     }
@@ -64,6 +82,9 @@ pub fn plan_hash(plan: &Plan) -> Result<String> {
 }
 
 fn valid_plan(record: &CaseRecord, id: &str, hash: &str) -> Result<Plan> {
+    if record.diagnostic.is_some() {
+        return calibrated_store::valid_native_plan(record, id, hash);
+    }
     let p = record.plan.as_ref().ok_or("请先生成检查计划。")?;
     if p.id != id
         || p.hash != hash
@@ -82,7 +103,34 @@ fn valid_plan(record: &CaseRecord, id: &str, hash: &str) -> Result<Plan> {
 
 impl Store {
     pub fn open(path: &std::path::Path) -> Result<Self> {
-        Self::initialize(Connection::open(path).map_err(storage_error)?)
+        let mut options = std::fs::OpenOptions::new();
+        options.read(true).write(true).create(true);
+        #[cfg(windows)]
+        {
+            use std::os::windows::fs::OpenOptionsExt;
+            options.share_mode(0);
+        }
+        let instance_lock = options
+            .open(path.with_extension("sqlite.lock"))
+            .map_err(|_| "案例库已由另一个实例打开，或目录不可写。")?;
+        let mut store = Self::initialize(Connection::open(path).map_err(storage_error)?)?;
+        let root = path.with_extension("artifacts");
+        let artifact_store = artifacts::ArtifactStore::new(&root)?;
+        let referenced = {
+            let mut statement = store
+                .conn
+                .prepare("SELECT id FROM artifacts")
+                .map_err(storage_error)?;
+            statement
+                .query_map([], |row| row.get::<_, String>(0))
+                .map_err(storage_error)?
+                .collect::<std::result::Result<std::collections::BTreeSet<_>, _>>()
+                .map_err(storage_error)?
+        };
+        artifact_store.recover(&referenced)?;
+        store.artifact_root = Some(root);
+        store._instance_lock = Some(instance_lock);
+        Ok(store)
     }
     pub fn memory() -> Result<Self> {
         Self::initialize(Connection::open_in_memory().map_err(storage_error)?)
@@ -91,7 +139,7 @@ impl Store {
         let version: u32 = conn
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .map_err(storage_error)?;
-        if version > 1 {
+        if version > 2 {
             return Err("数据库来自更新版本，停止打开以免覆盖；请使用兼容应用。".into());
         }
         conn.busy_timeout(std::time::Duration::from_secs(3))
@@ -100,13 +148,27 @@ impl Store {
           CREATE TABLE IF NOT EXISTS cases(id TEXT PRIMARY KEY, body TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS consents(token TEXT PRIMARY KEY, case_id TEXT NOT NULL REFERENCES cases(id) ON DELETE CASCADE, plan_hash TEXT NOT NULL, expires_at TEXT NOT NULL, consumed INTEGER NOT NULL DEFAULT 0);
           CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY, case_id TEXT NOT NULL REFERENCES cases(id) ON DELETE CASCADE, plan_hash TEXT NOT NULL, status TEXT NOT NULL, UNIQUE(case_id,plan_hash));
-          PRAGMA user_version=1;
+          CREATE TABLE IF NOT EXISTS artifacts(id TEXT PRIMARY KEY, case_id TEXT NOT NULL REFERENCES cases(id) ON DELETE CASCADE, run_id TEXT NOT NULL, size_bytes INTEGER NOT NULL, body TEXT NOT NULL);
+          PRAGMA user_version=2;
           DELETE FROM consents WHERE consumed=0;") .map_err(storage_error)?;
-        let store = Self { conn };
+        let store = Self {
+            conn,
+            artifact_root: None,
+            _instance_lock: None,
+        };
         // Completed reports remain; stale approvals never survive an application restart.
         for mut c in store.list()? {
-            if c.status == "collecting" || c.status == "awaiting_consent" {
+            if ["collecting", "awaiting_consent", "cancelling"].contains(&c.status.as_str()) {
                 c.status = "interrupted".into();
+                if let Some(d) = c.diagnostic.as_mut() {
+                    for run in &mut d.runs {
+                        if ["collecting", "cancelling", "awaiting_consent"]
+                            .contains(&run.status.as_str())
+                        {
+                            run.status = "interrupted".into();
+                        }
+                    }
+                }
                 store.save(&c)?;
             }
         }
@@ -125,6 +187,9 @@ impl Store {
     }
     pub fn create(&self, r: CreateCase) -> Result<CaseRecord> {
         validate_request(&r)?;
+        if r.category.is_some() {
+            return self.create_diagnostic(r);
+        }
         let sample = catalog()
             .scenarios
             .into_iter()
@@ -143,6 +208,7 @@ impl Store {
             status: "draft".into(),
             plan: None,
             report: None,
+            diagnostic: None,
         };
         self.save(&c)?;
         Ok(c)
@@ -168,6 +234,9 @@ impl Store {
     }
     pub fn build_plan(&self, id: &str) -> Result<CaseRecord> {
         let mut c = self.get(id)?;
+        if c.diagnostic.is_some() {
+            return self.build_native_plan(id, None);
+        }
         if c.report.is_some() {
             return Err("已完成案例不能覆盖；请新建一轮。".into());
         }
@@ -183,6 +252,10 @@ impl Store {
             scenario_id: c.scenario_id.clone(),
             incident_start_utc: c.incident_start_utc.clone(),
             incident_end_utc: c.incident_end_utc.clone(),
+            actions: vec![],
+            run_id: None,
+            artifact_hashes: vec![],
+            tool_identity: None,
         };
         p.hash = plan_hash(&p)?;
         c.plan = Some(p);
@@ -210,6 +283,9 @@ impl Store {
     }
     pub fn start(&mut self, r: StartRequest) -> Result<CaseRecord> {
         let c = self.get(&r.case_id)?;
+        if c.diagnostic.is_some() {
+            return Err("真实计划需通过异步受控执行入口启动。".into());
+        }
         valid_plan(&c, &r.plan_id, &r.plan_hash)?;
         let tx = self.conn.transaction().map_err(storage_error)?;
         let consent: Option<(String, String, String, i32)> = tx
@@ -286,6 +362,13 @@ impl Store {
     }
     pub fn delete(&self, id: &str) -> Result<()> {
         validate_id(id)?;
+        let case = self.get(id)?;
+        if ["collecting", "cancelling"].contains(&case.status.as_str()) {
+            return Err("请先取消运行并等待结束后删除。".into());
+        }
+        if let Some(root) = &self.artifact_root {
+            artifacts::ArtifactStore::new(root)?.delete_case(id)?;
+        }
         self.conn
             .execute("DELETE FROM cases WHERE id=?1", [id])
             .map_err(storage_error)?;

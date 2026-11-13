@@ -11,6 +11,8 @@ fn input(id: &str) -> CreateCase {
         incident_end_utc: END.into(),
         display_timezone: "Asia/Hong_Kong".into(),
         environment: "personal".into(),
+        category: None,
+        interview: None,
     }
 }
 fn scenario(id: &str) -> Scenario {

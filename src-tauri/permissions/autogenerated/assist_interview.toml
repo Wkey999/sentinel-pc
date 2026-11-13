@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-assist-interview"
+description = "Enables the assist_interview command without any pre-configured scope."
+commands.allow = ["assist_interview"]
+
+[[permission]]
+identifier = "deny-assist-interview"
+description = "Denies the assist_interview command without any pre-configured scope."
+commands.deny = ["assist_interview"]
