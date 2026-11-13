@@ -85,9 +85,24 @@ if($request.action -eq 'windows.system_snapshot') {
  }
 } elseif($request.action -eq 'audit.memory_configuration') {
  try {
-  $rows=@(Get-CimInstance -ClassName Win32_PhysicalMemory -Property ConfiguredClockSpeed,Speed,DeviceLocator,BankLabel,Capacity,SMBIOSMemoryType | Select-Object -First 129)
+  foreach($q in @(
+   @{class='Win32_ComputerSystem';properties=@('Manufacturer','Model')},
+   @{class='Win32_BaseBoard';properties=@('Manufacturer','Product')},
+   @{class='Win32_Processor';properties=@('Name','NumberOfCores','NumberOfLogicalProcessors')},
+   @{class='Win32_VideoController';properties=@('Name','DriverVersion','DriverDate','AdapterRAM')},
+   @{class='Win32_OperatingSystem';properties=@('Caption','Version','BuildNumber','OSArchitecture','TotalVisibleMemorySize')},
+   @{class='Win32_DiskDrive';properties=@('Model','Size','InterfaceType')},
+   @{class='Win32_SoundDevice';properties=@('Name')},
+   @{class='Win32_NetworkAdapter';properties=@('Name','PhysicalAdapter')}
+  )) {
+   try {
+    $srows=@(Get-CimInstance -ClassName $q.class -Property $q.properties)
+    $si=0;foreach($srow in $srows){$sfields=@{};foreach($p in $q.properties){$sfields[$p]=[string]$srow.$p};AddEvidence 'system.snapshot' ($q.class+'-'+$si) ([DateTime]::UtcNow.ToString('o')) $null $null $null $null $null $q.class $sfields $boot;$si++}
+   } catch {}
+  }
+  $rows=@(Get-CimInstance -ClassName Win32_PhysicalMemory -Property ConfiguredClockSpeed,Speed,DeviceLocator,BankLabel,Capacity,SMBIOSMemoryType,Manufacturer | Select-Object -First 129)
   $i=0;foreach($row in ($rows|Select-Object -First 128)) {
-   AddEvidence 'setup.memory' ('memory-'+$i) ([DateTime]::UtcNow.ToString('o')) $null $null $null $null $null ('memory-module-'+$i) @{configuredClockSpeed=[string]$row.ConfiguredClockSpeed;reportedSpeed=[string]$row.Speed;speedUnit='SMBIOS_reported_MHz';memoryType=[string]$row.SMBIOSMemoryType;capacityBytes=[string]$row.Capacity;deviceLocator=[string]$row.DeviceLocator;bankLabel=[string]$row.BankLabel;profileState='unknown';channelState='unknown'} $null;$i++
+   AddEvidence 'setup.memory' ('memory-'+$i) ([DateTime]::UtcNow.ToString('o')) $null $null $null $null $null ('memory-module-'+$i) @{configuredClockSpeed=[string]$row.ConfiguredClockSpeed;reportedSpeed=[string]$row.Speed;speedUnit='SMBIOS_reported_MHz';memoryType=[string]$row.SMBIOSMemoryType;capacityBytes=[string]$row.Capacity;deviceLocator=[string]$row.DeviceLocator;bankLabel=[string]$row.BankLabel;manufacturer=[string]$row.Manufacturer;profileState='unknown';channelState='unknown'} $null;$i++
   }
   Cover 'audit.memory_configuration' $(if($rows.Count -gt 128){'truncated'}elseif($rows.Count){'available'}else{'empty'}) 'SMBIOS 配置速率与位置声明；XMP/EXPO 开关与实际通道未由此接口验证'
  } catch {Cover 'audit.memory_configuration' (ErrorStatus $_) '内存配置查询未完整完成'}
@@ -164,6 +179,10 @@ pub fn system_directory() -> Result<PathBuf> {
     {
         Err("本机采集仅支持 Windows。".into())
     }
+}
+#[cfg(windows)]
+pub(crate) fn hardware_graphics() -> Option<Vec<crate::hardware::HardwareItem>> {
+    display::hardware_graphics()
 }
 pub fn collect(
     action: &crate::diagnostics::ActionSpec,

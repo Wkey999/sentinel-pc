@@ -177,11 +177,11 @@ impl HttpsJsonProvider {
             serde_json::json!({"protocol":"sentinel-json-v1","task":task,"input":payload["redactedSummary"],"allowedActionIds":payload["allowedActionIds"]})
         } else {
             let schema = if task == "assist_interview" {
-                r#"返回 {"questions":[{"id":"简短标识","prompt":"中文追问"}]}，最多3问。"#
+                r#"你是本地桌面诊断 Agent 的问诊助手。注意：本软件稍后会自动从本地读取用户的 CPU、显卡、内存、显示器、硬盘和系统日志，因此**严禁询问用户的电脑硬件配置（如 CPU、显卡、内存型号或系统版本）**。只追问主观现象（如哪款软件/游戏、表现细节）、发生时间、复现频率及近期是否改动过设置或更新驱动。返回 {"questions":[{"id":"简短标识","prompt":"中文追问"}]}，最多3问。"#
                     .to_string()
             } else {
                 format!(
-                    "返回 JSON：{{\"origin\":\"model\",\"summary\":\"中文证据摘要\",\"exclusions\":{},\"recommendations\":[],\"fallbackReason\":null,\"suggestedActionIds\":[]}}。exclusions 必须原样保留。不得添加事实或执行指令；建议将由本地规则补齐。",
+                    "返回 JSON：{{\"origin\":\"model\",\"summary\":\"中文诊断总结（用大白话直接报出本机实测关键数值如独显输出、刷新率、内存频率、磁盘空间等；明确分为【小问题（软件设置可调）】与【大问题（物理接线/进BIOS/找硬件售后，免费工具不背锅）】两部分，严禁使用反引号或尖括号）\",\"exclusions\":{},\"recommendations\":[],\"fallbackReason\":null,\"suggestedActionIds\":[]}}。exclusions 必须原样保留，recommendations 必须为空数组 []。",
                     serde_json::to_string(&local_explanation(&[]).exclusions)
                         .map_err(|_| "编码失败。")?
                 )
@@ -254,11 +254,19 @@ impl ModelProvider for HttpsJsonProvider {
             .map(|r| r.questions)
     }
     fn explain(&self, r: Report, allowed: Vec<String>) -> Result<Explanation> {
-        self.request(
+        let mut exp: Explanation = self.request(
             "explain_report",
             serde_json::to_value(r).map_err(|_| "报告摘要编码失败。")?,
             allowed,
-        )
+        )?;
+        if self.config.provider == ProviderKind::ChatCompletions {
+            exp.summary = exp.summary.replace('`', "").replace('<', "小于").replace('>', "大于");
+            let required_exclusions = local_explanation(&[]).exclusions;
+            if exp.exclusions.is_empty() {
+                exp.exclusions = required_exclusions;
+            }
+        }
+        Ok(exp)
     }
 }
 pub fn save_config(path: &Path, config: &ModelConfig) -> Result<()> {

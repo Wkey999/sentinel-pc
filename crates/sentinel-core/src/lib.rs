@@ -4,6 +4,7 @@ pub mod collectors;
 pub mod diagnostics;
 pub mod domain;
 pub mod gateway;
+pub mod hardware;
 pub mod provider;
 pub mod runner;
 pub mod tools;
@@ -359,6 +360,17 @@ impl Store {
         .map_err(storage_error)?;
         tx.commit().map_err(storage_error)?;
         Ok(next)
+    }
+    pub fn rename_case(&self, id: &str, title: &str) -> Result<CaseRecord> {
+        validate_id(id)?;
+        let title = title.trim();
+        if title.is_empty() || title.chars().count() > 80 || title.chars().any(char::is_control) {
+            return Err("名称需为 1–80 个字符，且不能包含换行或控制字符。".into());
+        }
+        let mut record = self.get(id)?;
+        record.title = title.into();
+        self.save(&record)?;
+        Ok(record)
     }
     pub fn delete(&self, id: &str) -> Result<()> {
         validate_id(id)?;

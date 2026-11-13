@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Sentinel PC · 哨兵（离线预览）",
+        "title": "Sentinel PC · 哨兵",
         "width": 1180,
         "height": 820,
         "minWidth": 640,

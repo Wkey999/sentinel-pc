@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@astryxdesign/core/AppShell";
+import { Banner } from "@astryxdesign/core/Banner";
+import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import { Button } from "@astryxdesign/core/Button";
 import { CodeBlock } from "@astryxdesign/core/CodeBlock";
 import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
@@ -12,15 +15,16 @@ import {
   SideNavItem,
   SideNavSection,
 } from "@astryxdesign/core/SideNav";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { VStack, HStack } from "@astryxdesign/core/Stack";
 import { StatusDot } from "@astryxdesign/core/StatusDot";
 import { Text } from "@astryxdesign/core/Text";
 import {
-  ClockIcon,
+  BoltIcon,
   Cog6ToothIcon,
+  ComputerDesktopIcon,
+  EllipsisHorizontalIcon,
   PlusIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import type {
@@ -30,12 +34,19 @@ import type {
   ExportResult,
 } from "./domain/contracts";
 import { DiagnosePage } from "./pages/DiagnosePage";
-import { HistoryPage } from "./pages/HistoryPage";
+import { HardwarePage } from "./pages/HardwarePage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { ToolsPage } from "./pages/ToolsPage";
 import { diagnostics } from "./services/diagnostics";
+import { latestAudit } from "./domain/case-session";
+import {
+  backgrounds,
+  readBackground,
+  saveBackground,
+  type BackgroundId,
+} from "./domain/appearance";
 
-type NavPage = "diagnose" | "history" | "tools" | "settings";
+type NavPage = "hardware" | "diagnose" | "tools" | "settings";
 type ColorMode = "dark" | "light" | "system";
 
 interface AppProps {
@@ -44,16 +55,38 @@ interface AppProps {
 }
 
 export function App({ colorMode, onColorModeChange }: AppProps) {
-  const [page, setPage] = useState<NavPage>("diagnose");
+  const [backgroundId, setBackgroundId] =
+    useState<BackgroundId>(readBackground);
+  const background =
+    backgrounds.find((item) => item.id === backgroundId) ?? backgrounds[0];
+  const changeBackground = (id: BackgroundId) => {
+    setBackgroundId(id);
+    saveBackground(id);
+  };
+  const [page, setPage] = useState<NavPage>("hardware");
   const [appStatus, setAppStatus] = useState<AppStatus>();
   const [capabilities, setCapabilities] = useState<BackendCapabilities>();
   const [cases, setCases] = useState<CaseRecord[]>([]);
   const [activeCase, setActiveCase] = useState<CaseRecord | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [sessionKey, setSessionKey] = useState(0);
+  const sessionRef = useRef(0);
+  const [autoStartAudit, setAutoStartAudit] = useState(false);
+  const [runBusy, setRunBusy] = useState(false);
+  const runBusyRef = useRef(false);
+  const [caseAction, setCaseAction] = useState<{
+    kind: "rename" | "delete";
+    record: CaseRecord;
+  } | null>(null);
+  const [caseTitle, setCaseTitle] = useState("");
+  const [caseError, setCaseError] = useState("");
+  const [caseActionBusy, setCaseActionBusy] = useState(false);
+  const caseActionPending = useRef(false);
   const [exportModal, setExportModal] = useState<ExportResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const refreshGeneration = useRef(0);
 
   const refreshAll = useCallback(async () => {
+    const generation = ++refreshGeneration.current;
     const [stRes, capsRes, listRes] = await Promise.allSettled([
       diagnostics.status(),
       diagnostics.capabilities(),
@@ -61,43 +94,106 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
     ]);
     if (stRes.status === "fulfilled") setAppStatus(stRes.value);
     if (capsRes.status === "fulfilled") setCapabilities(capsRes.value);
-    if (listRes.status === "fulfilled") setCases(listRes.value);
+    if (
+      listRes.status === "fulfilled" &&
+      generation === refreshGeneration.current
+    )
+      setCases(listRes.value);
   }, []);
 
   useEffect(() => {
     void refreshAll();
   }, [refreshAll]);
 
-  async function handleCaseUpdated(record: CaseRecord) {
-    setActiveCase(record);
-    await refreshAll();
-  }
-
-  async function handleExportCase(
-    caseId: string,
-    format: "markdown" | "json",
-  ) {
-    setBusy(true);
-    try {
-      const result = await diagnostics.export({ caseId, format });
-      setExportModal(result);
-      setCopied(false);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleDeleteCase(caseId: string) {
-    setBusy(true);
-    try {
-      await diagnostics.delete(caseId);
-      if (activeCase?.id === caseId) {
-        setActiveCase(null);
-      }
+  const handleCaseUpdated = useCallback(
+    async (record: CaseRecord) => {
+      if (sessionRef.current === sessionKey) setActiveCase(record);
       await refreshAll();
-    } finally {
-      setBusy(false);
+    },
+    [sessionKey, refreshAll],
+  );
+
+  const handleRunBusy = useCallback((value: boolean) => {
+    runBusyRef.current = value;
+    setRunBusy(value);
+  }, []);
+
+  function openSession(record: CaseRecord | null, startAudit = false) {
+    if (runBusyRef.current) {
+      setPage("diagnose");
+      return;
     }
+    if (record && record.id === activeCase?.id) {
+      setPage("diagnose");
+      return;
+    }
+    sessionRef.current += 1;
+    setSessionKey(sessionRef.current);
+    setAutoStartAudit(startAudit);
+    setActiveCase(record);
+    setPage("diagnose");
+    if (startAudit) handleRunBusy(true);
+  }
+
+  function openAudit() {
+    if (runBusyRef.current) {
+      setPage("diagnose");
+      return;
+    }
+    const recent = latestAudit(cases);
+    openSession(recent ?? null, !recent);
+  }
+
+  function showCaseAction(kind: "rename" | "delete", record: CaseRecord) {
+    setCaseError("");
+    setCaseTitle(record.title);
+    setCaseAction({ kind, record });
+  }
+
+  async function saveCaseAction() {
+    if (!caseAction || caseActionPending.current) return;
+    caseActionPending.current = true;
+    setCaseActionBusy(true);
+    setCaseError("");
+    try {
+      if (caseAction.kind === "rename") {
+        const updated = await diagnostics.rename({
+          caseId: caseAction.record.id,
+          title: caseTitle,
+        });
+        refreshGeneration.current += 1;
+        setCases((current) =>
+          current.map((item) => (item.id === updated.id ? updated : item)),
+        );
+        setActiveCase((current) =>
+          current?.id === updated.id ? updated : current,
+        );
+      } else {
+        await diagnostics.delete(caseAction.record.id);
+        refreshGeneration.current += 1;
+        setCases((current) =>
+          current.filter((item) => item.id !== caseAction.record.id),
+        );
+        if (activeCase?.id === caseAction.record.id) {
+          sessionRef.current += 1;
+          setSessionKey(sessionRef.current);
+          setAutoStartAudit(false);
+          setActiveCase(null);
+        }
+      }
+      setCaseAction(null);
+    } catch (error) {
+      setCaseError(error instanceof Error ? error.message : String(error));
+    } finally {
+      caseActionPending.current = false;
+      setCaseActionBusy(false);
+    }
+  }
+
+  async function handleExportCase(caseId: string, format: "markdown" | "json") {
+    const result = await diagnostics.export({ caseId, format });
+    setExportModal(result);
+    setCopied(false);
   }
 
   function handleDownloadExport() {
@@ -122,6 +218,13 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
   return (
     <AppShell
       contentPadding={0}
+      style={{
+        backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--color-background-body) 14%, transparent), color-mix(in srgb, var(--color-background-body) 22%, transparent)), url(${background.url})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center 20%",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
+      }}
       sideNav={
         <SideNav
           collapsible
@@ -129,108 +232,115 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
           header={
             <SideNavHeading
               heading="Sentinel PC · 哨兵"
-              icon={<NavIcon icon={<Icon icon={ShieldCheckIcon} size="sm" />} />}
+              icon={
+                <NavIcon icon={<Icon icon={ShieldCheckIcon} size="sm" />} />
+              }
               headingHref="#"
             />
           }
           footer={
-            <SideNavSection title="运行状态" isHeaderHidden>
+            <SideNavSection title="系统" isHeaderHidden>
               <SideNavItem
-                label={
-                  capabilities?.realCollectionEnabled
-                    ? "桌面原生（本机只读实采）"
-                    : appStatus?.mode === "native-synthetic"
-                      ? "桌面原生（合成预览）"
-                      : "浏览器 Mock 演示"
-                }
+                label="工具与来源"
+                icon={WrenchScrewdriverIcon}
                 href="#"
+                isSelected={page === "tools"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setPage("tools");
+                }}
+              />
+              <SideNavItem
+                label="设置与关于"
+                icon={Cog6ToothIcon}
+                href="#"
+                isSelected={page === "settings"}
                 onClick={(e) => {
                   e.preventDefault();
                   setPage("settings");
                 }}
-                endContent={
-                  <StatusDot
-                    variant={
-                      capabilities?.realCollectionEnabled
-                        ? "success"
-                        : appStatus?.mode === "native-synthetic"
-                          ? "accent"
-                          : "warning"
-                    }
-                    label="运行模式"
-                  />
-                }
               />
             </SideNavSection>
-          }>
+          }
+        >
           <SideNavSection title="主工作台" isHeaderHidden>
             <SideNavItem
-              label="新开智能问诊"
+              label="新对话"
+              isDisabled={runBusy}
               icon={PlusIcon}
               href="#"
               isSelected={page === "diagnose" && activeCase === null}
               onClick={(e) => {
                 e.preventDefault();
-                setActiveCase(null);
-                setPage("diagnose");
+                openSession(null);
               }}
             />
             <SideNavItem
-              label="诊断对话台"
-              icon={SparklesIcon}
+              label="一键体检"
+              isDisabled={!capabilities}
+              icon={BoltIcon}
               href="#"
-              isSelected={page === "diagnose" && activeCase !== null}
               onClick={(e) => {
                 e.preventDefault();
-                setPage("diagnose");
+                openAudit();
               }}
             />
             <SideNavItem
-              label={`案例历史 (${cases.length})`}
-              icon={ClockIcon}
+              label="硬件信息"
+              icon={ComputerDesktopIcon}
               href="#"
-              isSelected={page === "history"}
+              isSelected={page === "hardware"}
               onClick={(e) => {
                 e.preventDefault();
-                setPage("history");
-              }}
-            />
-            <SideNavItem
-              label="工具与来源"
-              icon={WrenchScrewdriverIcon}
-              href="#"
-              isSelected={page === "tools"}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage("tools");
-              }}
-            />
-            <SideNavItem
-              label="设置与关于"
-              icon={Cog6ToothIcon}
-              href="#"
-              isSelected={page === "settings"}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage("settings");
+                setPage("hardware");
               }}
             />
           </SideNavSection>
 
           <Divider />
 
-          <SideNavSection title="最近案例">
+          <SideNavSection title={`最近案例 (${cases.length})`}>
             <VStack gap={0.5}>
-              {cases.slice(0, 8).map((c) => (
+              {runBusy ? (
+                <Text type="supporting" color="secondary">
+                  检查进行中，完成后可切换或管理记录。
+                </Text>
+              ) : null}
+              {cases.map((c) => (
                 <SideNavItem
                   key={c.id}
                   label={c.title}
+                  isDisabled={runBusy}
                   href="#"
+                  actions={
+                    <DropdownMenu
+                      presentation="popover"
+                      button={{
+                        label: `案例操作：${c.title}`,
+                        icon: <Icon icon={EllipsisHorizontalIcon} size="sm" />,
+                        isIconOnly: true,
+                        variant: "ghost",
+                        isDisabled: runBusy,
+                      }}
+                      items={[
+                        {
+                          id: "rename",
+                          label: "重命名",
+                          onClick: () => showCaseAction("rename", c),
+                        },
+                        {
+                          id: "delete",
+                          label: "删除",
+                          variant: "destructive",
+                          onClick: () => showCaseAction("delete", c),
+                        },
+                      ]}
+                    />
+                  }
                   isSelected={page === "diagnose" && activeCase?.id === c.id}
                   onClick={(e) => {
                     e.preventDefault();
-                    setActiveCase(c);
-                    setPage("diagnose");
+                    openSession(c);
                   }}
                   endContent={
                     <StatusDot
@@ -255,31 +365,29 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
             </VStack>
           </SideNavSection>
         </SideNav>
-      }>
-      {page === "diagnose" ? (
+      }
+    >
+      <VStack
+        height="100%"
+        width="100%"
+        style={{ display: page === "diagnose" ? "flex" : "none" }}
+      >
         <DiagnosePage
+          key={sessionKey}
           status={appStatus}
           capabilities={capabilities}
           activeCase={activeCase}
+          autoStartAudit={autoStartAudit}
+          isVisible={page === "diagnose"}
+          onBusyChange={handleRunBusy}
+          onNewSession={() => openSession(null)}
+          onNewAudit={() => openSession(null, true)}
           onCaseUpdated={handleCaseUpdated}
           onResetCase={() => setActiveCase(null)}
           onExportCase={handleExportCase}
         />
-      ) : null}
-
-      {page === "history" ? (
-        <HistoryPage
-          cases={cases}
-          busy={busy}
-          onRefresh={refreshAll}
-          onOpenCase={(record) => {
-            setActiveCase(record);
-            setPage("diagnose");
-          }}
-          onExportCase={handleExportCase}
-          onDeleteCase={handleDeleteCase}
-        />
-      ) : null}
+      </VStack>
+      {page === "hardware" ? <HardwarePage onAudit={openAudit} /> : null}
 
       {page === "tools" ? <ToolsPage capabilities={capabilities} /> : null}
 
@@ -290,8 +398,67 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
           onCapabilitiesChanged={refreshAll}
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
+          backgroundId={backgroundId}
+          onBackgroundChange={changeBackground}
         />
       ) : null}
+
+      <Dialog
+        isOpen={Boolean(caseAction)}
+        purpose={caseAction?.kind === "delete" ? "required" : "form"}
+        onOpenChange={(open) => {
+          if (!open && !caseActionBusy) setCaseAction(null);
+        }}
+        width={420}
+      >
+        <DialogHeader
+          title={caseAction?.kind === "delete" ? "删除这条记录？" : "重命名"}
+          subtitle={
+            caseAction?.kind === "delete"
+              ? `将删除「${caseAction.record.title}」及其检查结果，无法恢复。`
+              : "名称仅保存在这台电脑。"
+          }
+        />
+        <VStack gap={4}>
+          {caseError ? (
+            <Banner status="error" title="操作未完成" description={caseError} />
+          ) : null}
+          {caseAction?.kind === "rename" ? (
+            <TextInput
+              label="名称"
+              value={caseTitle}
+              onChange={setCaseTitle}
+              hasAutoFocus
+              isDisabled={caseActionBusy}
+              onEnter={() => void saveCaseAction()}
+            />
+          ) : null}
+          <HStack gap={2} hAlign="end">
+            <Button
+              label="取消"
+              isDisabled={caseActionBusy}
+              onClick={() => setCaseAction(null)}
+            />
+            <Button
+              label={
+                caseActionBusy
+                  ? "处理中…"
+                  : caseAction?.kind === "delete"
+                    ? "删除记录"
+                    : "保存名称"
+              }
+              variant={
+                caseAction?.kind === "delete" ? "destructive" : "primary"
+              }
+              isDisabled={
+                caseActionBusy ||
+                (caseAction?.kind === "rename" && !caseTitle.trim())
+              }
+              onClick={() => void saveCaseAction()}
+            />
+          </HStack>
+        </VStack>
+      </Dialog>
 
       <Dialog
         isOpen={Boolean(exportModal)}
@@ -299,7 +466,8 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
           if (!open) setExportModal(null);
         }}
         width={680}
-        purpose="info">
+        purpose="info"
+      >
         <DialogHeader
           title={`脱敏报告导出预览 · ${exportModal?.filename ?? ""}`}
           subtitle="默认已移除用户自由描述、授权令牌及本机路径，可直接复制发往论坛或维修人员。"
@@ -308,7 +476,8 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
           {exportModal ? (
             <VStack
               width="100%"
-              style={{ maxHeight: "52vh", overflowY: "auto" }}>
+              style={{ maxHeight: "52vh", overflowY: "auto" }}
+            >
               <CodeBlock
                 code={exportModal.content}
                 language={

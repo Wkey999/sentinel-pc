@@ -2,6 +2,7 @@ fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "get_app_status",
+            "get_hardware_info",
             "create_case",
             "create_setup_audit",
             "get_case",
@@ -11,6 +12,7 @@ fn main() {
             "start_plan",
             "export_case",
             "delete_case",
+            "rename_case",
             "get_backend_capabilities",
             "build_import_plan",
             "build_tool_plan",
@@ -27,6 +29,7 @@ fn main() {
             "list_artifacts",
             "configure_model",
             "clear_model",
+            "open_windows_settings",
         ]),
     ))
     .expect("Tauri build metadata");

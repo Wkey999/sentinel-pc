@@ -151,7 +151,7 @@ impl Store {
         run.incident_end_utc = now.clone();
         let c = CaseRecord {
             id: Uuid::new_v4().to_string(),
-            title: "一键傻瓜体检".into(),
+            title: "一键体检".into(),
             symptom: String::new(),
             scenario_id: String::new(),
             incident_start_utc: now.clone(),

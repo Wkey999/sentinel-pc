@@ -15,6 +15,7 @@ import {
   type StartRequest,
   type ExportRequest,
   type ExportResult,
+  type SetupAuditRequest,
 } from "../domain/contracts";
 
 export const samples = catalogSchema.parse(rawCatalog).scenarios;
@@ -258,6 +259,27 @@ export class MockService {
     c.status = "completed_partial";
     this.cases.set(c.id, c);
     return clone(c);
+  }
+  async rename(id: string, title: string): Promise<CaseRecord> {
+    const record = await this.get(id);
+    record.title = title;
+    this.cases.set(id, record);
+    return clone(record);
+  }
+  async createSetupAudit(input: SetupAuditRequest): Promise<CaseRecord> {
+    const now = new Date().toISOString();
+    const record = await this.create({
+      scenarioId: "application",
+      symptom: "一键体检（浏览器演示）",
+      incidentStartUtc: now,
+      incidentEndUtc: now,
+      displayTimezone: input.displayTimezone,
+      environment: input.environment,
+    });
+    record.title = "一键体检";
+    record.diagnostic = { mode: "setup_audit", runs: [] };
+    this.cases.set(record.id, record);
+    return clone(record);
   }
   async delete(id: string): Promise<void> {
     this.cases.delete(id);

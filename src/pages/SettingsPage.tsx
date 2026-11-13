@@ -11,6 +11,8 @@ import { Tab, TabList } from "@astryxdesign/core/TabList";
 import { Heading, Text } from "@astryxdesign/core/Text";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { Token } from "@astryxdesign/core/Token";
+import { Thumbnail } from "@astryxdesign/core/Thumbnail";
+import { backgrounds, type BackgroundId } from "../domain/appearance";
 import type { AppStatus, BackendCapabilities } from "../domain/contracts";
 import { diagnostics } from "../services/diagnostics";
 
@@ -20,6 +22,8 @@ interface SettingsPageProps {
   onCapabilitiesChanged: () => Promise<void>;
   colorMode: "dark" | "light" | "system";
   onColorModeChange: (mode: "dark" | "light" | "system") => void;
+  backgroundId: BackgroundId;
+  onBackgroundChange: (id: BackgroundId) => void;
 }
 
 export function SettingsPage({
@@ -28,6 +32,8 @@ export function SettingsPage({
   onCapabilitiesChanged,
   colorMode,
   onColorModeChange,
+  backgroundId,
+  onBackgroundChange,
 }: SettingsPageProps) {
   const [section, setSection] = useState<string>("runtime");
   const [endpoint, setEndpoint] = useState(
@@ -120,14 +126,14 @@ export function SettingsPage({
             {section === "runtime" ? (
               <Card variant="default" padding={5}>
                 <VStack gap={4}>
-                  <Heading level={4}>当前运行环境</Heading>
+                  <Heading level={4}>界面外观</Heading>
                   <Divider />
                   <HStack hAlign="between" vAlign="center" width="100%">
                     <Text size="sm" weight="medium">
-                      界面外观
+                      配色模式
                     </Text>
                     <Selector
-                      label="界面外观"
+                      label="配色模式"
                       isLabelHidden
                       size="sm"
                       value={colorMode}
@@ -141,6 +147,51 @@ export function SettingsPage({
                       ]}
                     />
                   </HStack>
+                  <VStack gap={3}>
+                    <Text size="sm" weight="bold">
+                      背景图片
+                    </Text>
+                    <Text size="sm" color="secondary">
+                      点击下方预览即可切换，自动记住选择；配色模式保持独立。
+                    </Text>
+                    <HStack gap={4} wrap="wrap" width="100%">
+                      {backgrounds.map((item) => (
+                        <VStack
+                          key={item.id}
+                          gap={2}
+                          style={{
+                            flex: "1 1 14rem",
+                            minWidth: 0,
+                            maxWidth: "18rem",
+                          }}
+                        >
+                          <Thumbnail
+                            src={item.url}
+                            alt={item.label}
+                            label={`切换背景：${item.label}`}
+                            onClick={() => onBackgroundChange(item.id)}
+                            style={{
+                              width: "100%",
+                              height: "auto",
+                              aspectRatio: "16 / 9",
+                              borderRadius: "var(--radius-container)",
+                            }}
+                          />
+                          <Button
+                            label={`${backgroundId === item.id ? "已选用 · " : "使用 · "}${item.label}`}
+                            variant={
+                              backgroundId === item.id ? "primary" : "secondary"
+                            }
+                            aria-pressed={backgroundId === item.id}
+                            width="100%"
+                            onClick={() => onBackgroundChange(item.id)}
+                          />
+                        </VStack>
+                      ))}
+                    </HStack>
+                  </VStack>
+                  <Divider />
+                  <Heading level={4}>当前运行环境</Heading>
                   <HStack hAlign="between" vAlign="center" width="100%">
                     <Text size="sm" weight="medium">
                       前端架构与版本
@@ -200,7 +251,9 @@ export function SettingsPage({
                 />
                 <Card variant="default" padding={5}>
                   <VStack gap={4}>
-                    <Heading level={4}>模型端点与凭据配置（DeepSeek / HTTPS 网关）</Heading>
+                    <Heading level={4}>
+                      模型端点与凭据配置（DeepSeek / HTTPS 网关）
+                    </Heading>
                     <Divider />
                     <TextInput
                       label="HTTPS 模型接口地址"
@@ -223,7 +276,9 @@ export function SettingsPage({
                     />
                     {modelFeedback ? (
                       <Banner
-                        status={modelFeedback.kind === "success" ? "success" : "error"}
+                        status={
+                          modelFeedback.kind === "success" ? "success" : "error"
+                        }
                         title={modelFeedback.text}
                       />
                     ) : null}
@@ -237,7 +292,9 @@ export function SettingsPage({
                       <Button
                         label={modelBusy ? "保存中…" : "安全保存配置"}
                         variant="primary"
-                        isDisabled={modelBusy || !endpoint.trim() || !apiKey.trim()}
+                        isDisabled={
+                          modelBusy || !endpoint.trim() || !apiKey.trim()
+                        }
                         onClick={() => void handleSaveModel()}
                       />
                     </HStack>
@@ -251,13 +308,16 @@ export function SettingsPage({
                       • 绝不在浏览器 localStorage 或导出报告中保存任何 API Key。
                     </Text>
                     <Text size="sm">
-                      • 发送给模型的摘要默认先经过本机脱敏，并限定在受控字节预算内。
+                      •
+                      发送给模型的摘要默认先经过本机脱敏，并限定在受控字节预算内。
                     </Text>
                     <Text size="sm">
-                      • 模型只能从内置动作白名单中建议检查项，不能自由拼接命令行参数。
+                      •
+                      模型只能从内置动作白名单中建议检查项，不能自由拼接命令行参数。
                     </Text>
                     <Text size="sm">
-                      • 断网、未配置 Key 或响应校验失败时，自动无缝回退本地确定性规则。
+                      • 断网、未配置 Key
+                      或响应校验失败时，自动无缝回退本地确定性规则。
                     </Text>
                   </VStack>
                 </Card>
@@ -270,13 +330,17 @@ export function SettingsPage({
                   <Heading level={4}>脱敏与数据保留原则</Heading>
                   <Divider />
                   <Text size="sm">
-                    • 默认导出仅包含结构化观察、覆盖度与脱敏摘要，不包含原始用户自由文本、同意令牌或完整本机路径。
+                    •
+                    默认导出仅包含结构化观察、覆盖度与脱敏摘要，不包含原始用户自由文本、同意令牌或完整本机路径。
                   </Text>
                   <Text size="sm">
-                    • 导出前始终提供完整文本预览，方便你发往贴吧、论坛或发给维修人员前再次人工核对。
+                    •
+                    导出前始终提供完整文本预览，方便你发往贴吧、论坛或发给维修人员前再次人工核对。
                   </Text>
                   <Text size="sm">
-                    • 桌面端案例保存在本机应用数据目录的 SQLite 中，支持随时单个删除；计划中的 30 天自动清理策略将随后端 Schema v2 一并落地。
+                    • 桌面端案例保存在本机应用数据目录的 SQLite
+                    中，支持随时单个删除；计划中的 30 天自动清理策略将随后端
+                    Schema v2 一并落地。
                   </Text>
                 </VStack>
               </Card>
@@ -288,7 +352,8 @@ export function SettingsPage({
                   <Heading level={4}>Sentinel PC · 哨兵</Heading>
                   <Divider />
                   <Text size="sm" color="secondary">
-                    面向普通游戏玩家与日常办公用户的 Windows 桌面智能故障诊断 Agent。
+                    面向普通游戏玩家与日常办公用户的 Windows 桌面智能故障诊断
+                    Agent。
                   </Text>
                   <Text size="sm">
                     核心准则：复用成熟合规检测工具、保留原始证据出处、坦诚标注“尚不能判断的边界”，不拿单一日志编号直接诱导盲目更换硬件。

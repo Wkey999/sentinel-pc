@@ -1,5 +1,48 @@
 import { z } from "zod";
 
+export const hardwareGroupIds = [
+  "cpu",
+  "baseboard",
+  "memory",
+  "graphics",
+  "monitors",
+  "storage",
+  "npu",
+  "audio",
+  "network",
+  "bios",
+] as const;
+export const hardwareInfoSchema = z.strictObject({
+  origin: z.enum(["windows_native", "browser_demo"]),
+  collectedAtUtc: z.string(),
+  computerModel: z.string(),
+  operatingSystem: z.string(),
+  groups: z
+    .array(
+      z.strictObject({
+        id: z.enum(hardwareGroupIds),
+        label: z.string(),
+        status: z.enum(["available", "empty", "unavailable"]),
+        items: z
+          .array(
+            z.strictObject({
+              name: z.string(),
+              details: z.array(z.string()),
+              problem: z.boolean(),
+            }),
+          )
+          .max(64),
+      }),
+    )
+    .length(hardwareGroupIds.length)
+    .refine(
+      (groups) =>
+        groups.every((group, index) => group.id === hardwareGroupIds[index]),
+      "硬件信息分组缺失或重复",
+    ),
+});
+export type HardwareInfo = z.infer<typeof hardwareInfoSchema>;
+
 export const scenarioId = z.enum([
   "restart",
   "application",
@@ -191,6 +234,19 @@ export const consentSchema = z.strictObject({
   expiresAtUtc: z.string(),
 });
 export const caseRequestSchema = z.strictObject({ caseId: z.string().uuid() });
+export const renameCaseSchema = z.strictObject({
+  caseId: z.string().uuid(),
+  title: z
+    .string()
+    .trim()
+    .min(1)
+    .refine(
+      (value) =>
+        Array.from(value).length <= 80 &&
+        !/[\u0000-\u001f\u007f-\u009f]/u.test(value),
+      "名称最多 80 个字符，不能包含换行或控制字符",
+    ),
+});
 export const approveSchema = z.strictObject({
   caseId: z.string().uuid(),
   planId: z.string().uuid(),
@@ -241,6 +297,61 @@ export const retestRequestSchema = z.strictObject({
   changedVariable: z.string().trim().min(1).max(400),
   userFeedback: z.string().trim().min(1).max(400),
 });
+export const interviewRequestSchema = z.strictObject({
+  symptom: z.string().trim().min(1).max(1000),
+  category: categoryId,
+  context: z
+    .strictObject({
+      frequency: z.string(),
+      recentChanges: z.string(),
+      reproduction: z.string(),
+      answers: z.array(
+        z.strictObject({
+          questionId: z.string(),
+          answer: z.string(),
+        }),
+      ),
+    })
+    .optional(),
+  allowModel: z.boolean(),
+});
+export const interviewResultSchema = z.strictObject({
+  origin: z.string(),
+  questions: z.array(
+    z.strictObject({
+      id: z.string(),
+      prompt: z.string(),
+    }),
+  ),
+  fallbackReason: z.string().nullable(),
+});
+export const explainRequestSchema = z.strictObject({
+  caseId: z.string().uuid(),
+  allowModel: z.boolean(),
+});
+export const recommendationSchema = z.strictObject({
+  priority: z.number().int().nonnegative(),
+  instruction: z.string(),
+  expectedResult: z.string(),
+  stopCondition: z.string(),
+  evidenceIds: z.array(z.string()),
+});
+export const explanationSchema = z.strictObject({
+  origin: z.string(),
+  summary: z.string(),
+  exclusions: z.array(z.string()),
+  recommendations: z.array(recommendationSchema),
+  fallbackReason: z.string().nullable(),
+  suggestedActionIds: z.array(z.string()).default([]),
+});
+export const reportFormatSchema = z.enum([
+  "smartctl_json",
+  "crystal_disk_info_text",
+]);
+export const importRequestSchema = z.strictObject({
+  caseId: z.string().uuid(),
+  format: reportFormatSchema,
+});
 
 export type Evidence = z.infer<typeof evidenceSchema>;
 export type Scenario = z.infer<typeof scenarioSchema>;
@@ -261,3 +372,9 @@ export type SetupAuditRequest = z.infer<typeof setupAuditRequestSchema>;
 export type ToolCandidate = z.infer<typeof toolCandidateSchema>;
 export type ModelConfig = z.infer<typeof modelConfigSchema>;
 export type RetestRequest = z.infer<typeof retestRequestSchema>;
+export type InterviewRequest = z.infer<typeof interviewRequestSchema>;
+export type InterviewResult = z.infer<typeof interviewResultSchema>;
+export type ExplainRequest = z.infer<typeof explainRequestSchema>;
+export type Explanation = z.infer<typeof explanationSchema>;
+export type ReportFormat = z.infer<typeof reportFormatSchema>;
+export type ImportRequest = z.infer<typeof importRequestSchema>;

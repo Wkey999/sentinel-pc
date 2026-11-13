@@ -30,7 +30,7 @@ export interface InterviewAnswer {
 
 export const SETUP_AUDIT_PRESET: CategoryPreset = {
   id: "setup_audit",
-  label: "⚡ 一键傻瓜体检（查装机乌龙与性能释放）",
+  label: "⚡ 一键体检（查装机乌龙与性能释放）",
   subtitle: "免打字免问诊：直接扫描显示器是否插错主板口、高刷是否锁 60Hz、内存 XMP/双通道及电源计划",
   mappedScenarioId: "application",
   examplePrompt:
@@ -70,6 +70,13 @@ export const CATEGORY_PRESETS: CategoryPreset[] = [
 
 export function detectCategoryFromText(text: string): SymptomCategory {
   const lower = text.toLowerCase();
+  if (
+    /cpu|处理器|显卡|gpu|内存|配置|型号|什么电脑|啥电脑|几hz|刷新率|核显|独显|体检|参数|跑分/.test(
+      lower,
+    )
+  ) {
+    return "setup_audit";
+  }
   if (/硬盘|掉盘|ssd|hdd|nvme|smart|加载慢|crystal|磁盘|卡死.*读/.test(lower)) {
     return "storage_io";
   }
@@ -85,23 +92,23 @@ export function detectCategoryFromText(text: string): SymptomCategory {
 export function getFollowupQuestions(category: SymptomCategory): FollowupQuestion[] {
   const commonTime: FollowupQuestion = {
     id: "when_occurred",
-    prompt: "这个问题大概发生在什么时候？是否能稳定复现？",
-    hint: "时间越准，日志检索范围越精准；不记得也没关系。",
+    prompt: "第 2 步（点选即可）：这个问题大概发生在什么时候？",
+    hint: "直接点选最接近的一项，系统会自动锁定本机日志时间范围。",
     quickOptions: [
-      "刚刚发生（10 分钟内）",
+      "刚刚发生（最近 1 小时内）",
       "今天之内发生过多次",
-      "记不清具体时间了",
+      "最近几天偶尔出现（扩大到 24 小时排查）",
     ],
   };
 
   const commonChange: FollowupQuestion = {
     id: "recent_change",
-    prompt: "出问题前的 48 小时内，电脑有没有过什么变化？",
-    hint: "近期变更是最容易被忽略的线索。",
+    prompt: "第 3 步（点选即可）：出问题前电脑有没有动过设置或更新？",
+    hint: "选完这一项将立即自动扫描本机硬件与系统日志。",
     quickOptions: [
-      "刚更新过显卡驱动或系统补丁",
-      "新装了软件/插件或插了新外设",
-      "什么都没动过，突然就这样",
+      "什么都没动过，正常用着突然出现",
+      "最近更新过显卡驱动或 Windows 系统补丁",
+      "最近新装了游戏/软件，或插拔过硬件外设",
     ],
   };
 
@@ -112,12 +119,12 @@ export function getFollowupQuestions(category: SymptomCategory): FollowupQuestio
       return [
         {
           id: "display_behavior",
-          prompt: "黑屏或闪退时，电脑的声音、风扇和主机灯是什么状态？",
-          hint: "这能帮我们区分是“显卡驱动重置”还是“整机断电”。",
+          prompt: "第 1 步（点选即可）：游戏黑屏、掉帧或闪退时，最接近下面哪种表现？",
+          hint: "不用打字，直接点选最符合你看到的标准现象：",
           quickOptions: [
-            "黑一下马上恢复，游戏语音/背景音还在",
-            "游戏直接闪退回桌面，弹出报错窗口",
-            "黑屏后彻底没反应，只能长按电源重启",
+            "打游戏掉帧卡顿 / 感觉帧数不如以前流畅",
+            "屏幕黑一下又恢复，或者游戏直接闪退回桌面",
+            "黑屏后风扇狂转但有声音，必须按电源键重启",
           ],
         },
         commonTime,
@@ -127,12 +134,12 @@ export function getFollowupQuestions(category: SymptomCategory): FollowupQuestio
       return [
         {
           id: "restart_trigger",
-          prompt: "重启前电脑正在做什么？重启过程有没有蓝屏进度条？",
-          hint: "区分高负载触发与待机触发非常关键。",
+          prompt: "第 1 步（点选即可）：电脑死机或自动重启时，最接近下面哪种情况？",
+          hint: "不用打字，直接点选最符合你看到的标准现象：",
           quickOptions: [
-            "打大型游戏高负载时直接黑屏重启，无蓝屏",
-            "出现过蓝屏界面并收集错误百分比",
-            "只开网页或挂机时也莫名其妙重启",
+            "玩大型游戏高负载时突然像断电一样黑屏重启（无蓝屏）",
+            "弹出过蓝屏画面（有错误代码或收集百分比）后重启",
+            "平时看网页、桌面待机时也会莫名其妙死机或重启",
           ],
         },
         commonTime,
@@ -142,12 +149,12 @@ export function getFollowupQuestions(category: SymptomCategory): FollowupQuestio
       return [
         {
           id: "storage_symptom",
-          prompt: "硬盘异常具体表现在哪一块？手头有没有现成的检测报告？",
-          hint: "如果已经有 CrystalDiskInfo 或 smartctl 导出文件，后续可直接导入。",
+          prompt: "第 1 步（点选即可）：硬盘或加载异常最接近下面哪种表现？",
+          hint: "不用打字，直接点选最符合你看到的标准现象：",
           quickOptions: [
-            "系统盘或游戏盘加载卡顿、资源管理器未响应",
-            "副盘偶尔消失，重启电脑又重新出现",
-            "我已经有检测软件导出的文本/JSON 报告",
+            "进游戏/读图加载极慢，偶尔整个画面卡住几秒",
+            "D 盘/副盘偶尔在“此电脑”里消失，重启后又出来",
+            "软件提示磁盘空间不足或疑似硬盘健康告警",
           ],
         },
         commonTime,
@@ -157,12 +164,12 @@ export function getFollowupQuestions(category: SymptomCategory): FollowupQuestio
       return [
         {
           id: "peripheral_scope",
-          prompt: "出问题时，是单个软件卡死，还是连带键盘鼠标一起断连？",
-          hint: "有助于判断是软件自身无响应还是 USB 供电/接口链路异常。",
+          prompt: "第 1 步（点选即可）：卡死或外设断连最接近下面哪种表现？",
+          hint: "不用打字，直接点选最符合你看到的标准现象：",
           quickOptions: [
-            "仅某个办公软件无响应，鼠标还能正常移动",
-            "听到 USB 拔出/插入提示音，外设一起失灵几秒",
-            "接在扩展坞/前面板上的设备更容易断",
+            "鼠标、键盘或耳机偶尔断连几秒，伴随 USB 提示音",
+            "办公软件/浏览器经常显示“未响应”转圈卡住",
+            "插在机箱前面板或扩展坞上的 USB 设备经常失灵",
           ],
         },
         commonTime,

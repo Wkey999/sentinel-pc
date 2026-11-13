@@ -186,6 +186,55 @@ fn repeated_start_returns_same_report() {
     assert_eq!(store.list().unwrap().len(), 1);
 }
 #[test]
+fn renaming_preserves_case_plan_consent_report_and_does_not_duplicate() {
+    let mut store = Store::memory().unwrap();
+    let (original, request) = ready(&store, "restart");
+    let renamed = store.rename_case(&original.id, "  游戏重启排查  ").unwrap();
+    assert_eq!(renamed.id, original.id);
+    assert_eq!(renamed.title, "游戏重启排查");
+    assert_eq!(
+        renamed.plan.as_ref().unwrap().hash,
+        original.plan.as_ref().unwrap().hash
+    );
+    let done = store.start(request).unwrap();
+    assert_eq!(done.title, "游戏重启排查");
+    let report = serde_json::to_value(&done.report).unwrap();
+    store.rename_case(&done.id, "复查记录").unwrap();
+    assert_eq!(
+        serde_json::to_value(store.get(&done.id).unwrap().report).unwrap(),
+        report
+    );
+    assert_eq!(store.list().unwrap().len(), 1);
+    store.delete(&done.id).unwrap();
+    assert!(store.list().unwrap().is_empty());
+}
+#[test]
+fn case_names_are_validated_and_survive_reopening() {
+    let root = std::env::temp_dir().join(format!("sentinel-case-name-{}", uuid::Uuid::new_v4()));
+    std::fs::create_dir(&root).unwrap();
+    let path = root.join("metadata.sqlite");
+    let id;
+    {
+        let store = Store::open(&path).unwrap();
+        let record = store.create(input("restart")).unwrap();
+        id = record.id;
+        for name in [
+            String::new(),
+            "x\ny".into(),
+            "x\u{0}y".into(),
+            "字".repeat(81),
+        ] {
+            assert!(store.rename_case(&id, &name).is_err());
+        }
+        store.rename_case(&id, "我的笔记本").unwrap();
+    }
+    {
+        let reopened = Store::open(&path).unwrap();
+        assert_eq!(reopened.get(&id).unwrap().title, "我的笔记本");
+    }
+    std::fs::remove_dir_all(root).unwrap();
+}
+#[test]
 fn export_does_not_leak_symptom_serial_or_consent() {
     let mut store = Store::memory().unwrap();
     let (_, r) = ready(&store, "storage");

@@ -2,9 +2,19 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 import { z } from "zod";
 import * as c from "../domain/contracts";
 import { MockService } from "./mock";
+import { hardwareDemo } from "./hardware-demo";
+import { createHardwareCache } from "./hardware-cache";
 
 const native = isTauri();
 const mock = new MockService();
+const hardwareCache = createHardwareCache({
+  origin: native ? "windows_native" : "browser_demo",
+  storage: () => localStorage,
+  load: () =>
+    call("get_hardware_info", undefined, c.hardwareInfoSchema, async () =>
+      hardwareDemo(),
+    ),
+});
 // Native failures never silently switch to Mock data.
 async function call<T>(
   command: string,
@@ -18,6 +28,9 @@ async function call<T>(
   return schema.parse(result);
 }
 export const diagnostics = {
+  hardware: hardwareCache.get,
+  cachedHardware: hardwareCache.peek,
+  hardwareIsFresh: hardwareCache.isFresh,
   status: () =>
     call("get_app_status", undefined, c.appStatusSchema, async () => ({
       version: "0.1.0",
@@ -54,16 +67,7 @@ export const diagnostics = {
       "create_setup_audit",
       c.setupAuditRequestSchema.parse(r),
       c.caseSchema,
-      () =>
-        mock.create({
-          category: "gaming_display",
-          symptom:
-            "帮我全机扫描一遍基础设置、装机乌龙与性能释放（显示器接核显还是独显、刷新率、内存频率、电源计划）",
-          incidentStartUtc: new Date(Date.now() - 3600_000).toISOString(),
-          incidentEndUtc: new Date().toISOString(),
-          displayTimezone: r.displayTimezone,
-          environment: r.environment,
-        }),
+      () => mock.createSetupAudit(r),
     ),
   configureModel: (r: c.ModelConfig) =>
     call(
@@ -74,8 +78,7 @@ export const diagnostics = {
         throw new Error("浏览器预览模式无法保存加密凭据，请在桌面端使用。");
       },
     ),
-  clearModel: () =>
-    call("clear_model", undefined, z.null(), async () => null),
+  clearModel: () => call("clear_model", undefined, z.null(), async () => null),
   probeTools: (toolboxDirectory?: string) =>
     call(
       "probe_tools",
@@ -92,6 +95,47 @@ export const diagnostics = {
     ),
   cancelRun: (r: { caseId: string; runId: string }) =>
     call("cancel_run", r, c.caseSchema, () => mock.get(r.caseId)),
+  assistInterview: (r: c.InterviewRequest) =>
+    call(
+      "assist_interview",
+      c.interviewRequestSchema.parse(r),
+      c.interviewResultSchema,
+      async () => ({
+        origin: "local_rule",
+        questions: [],
+        fallbackReason: "browser_mock",
+      }),
+    ),
+  explainReport: (r: c.ExplainRequest) =>
+    call(
+      "explain_report",
+      c.explainRequestSchema.parse(r),
+      c.explanationSchema,
+      async () => ({
+        origin: "local_rule",
+        summary: "浏览器预览模式：当前仅展示本地确定性规则与优先级指南。",
+        exclusions: [],
+        recommendations: [],
+        fallbackReason: "browser_mock",
+        suggestedActionIds: [],
+      }),
+    ),
+  importReport: (r: c.ImportRequest) =>
+    call(
+      "import_report",
+      c.importRequestSchema.parse(r),
+      c.caseSchema.nullable(),
+      async () => {
+        throw new Error("请在桌面端应用中使用本地检测报告导入功能。");
+      },
+    ),
+  buildImportPlan: (id: string) =>
+    call(
+      "build_import_plan",
+      c.caseRequestSchema.parse({ caseId: id }),
+      c.caseSchema,
+      () => mock.build(id),
+    ),
   create: (r: c.CreateCase) =>
     call("create_case", c.createCaseSchema.parse(r), c.caseSchema, () =>
       mock.create(r),
@@ -120,6 +164,12 @@ export const diagnostics = {
     call("start_plan", c.startSchema.parse(r), c.caseSchema, () =>
       mock.start(r),
     ),
+  rename: (request: { caseId: string; title: string }) => {
+    const r = c.renameCaseSchema.parse(request);
+    return call("rename_case", r, c.caseSchema, () =>
+      mock.rename(r.caseId, r.title),
+    );
+  },
   delete: (id: string) =>
     call(
       "delete_case",
@@ -137,4 +187,10 @@ export const diagnostics = {
       c.exportResultSchema,
       () => mock.export(r),
     ),
+  openWindowsSettings: (uri: string) =>
+    call("open_windows_settings", { uri }, z.null(), async () => {
+      throw new Error(
+        "浏览器预览模式无法跳转本机 Windows 设置，请在桌面端使用。",
+      );
+    }),
 };

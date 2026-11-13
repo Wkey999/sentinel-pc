@@ -152,6 +152,12 @@ impl Backend {
                         (report, tasks)
                     }
                 };
+                let report_for_ai = report.clone();
+                let allowed_for_ai = work
+                    .record
+                    .plan
+                    .as_ref()
+                    .map_or_else(Vec::new, |p| p.action_ids.clone());
                 let saved = match backend.store.lock() {
                     Ok(mut store) => store
                         .finish_native_run(
@@ -164,6 +170,15 @@ impl Backend {
                         .map(|_| ()),
                     Err(_) => Err("案例存储不可用。".into()),
                 };
+                if saved.is_ok() && !cancel.is_cancelled() {
+                    let gw = backend.gateway.lock().ok().map(|g| g.clone());
+                    if let Some(gw) = gw.filter(|g| g.enabled()) {
+                        let exp = gw.explain_report(&report_for_ai, allowed_for_ai);
+                        if let Ok(mut store) = backend.store.lock() {
+                            let _ = store.save_explanation(&work.record.id, &worker_run, exp);
+                        }
+                    }
+                }
                 if saved.is_err() {
                     if let Ok(mut failures) = backend.failures.lock() {
                         failures.insert(worker_run.clone(), "结果保存失败。".into());

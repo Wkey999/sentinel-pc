@@ -50,7 +50,7 @@ const STATUS_MAP: Record<
 };
 
 const SCENARIO_LABELS: Record<string, string> = {
-  setup_audit: "一键傻瓜体检",
+  setup_audit: "一键体检",
   restart: "突然重启 / 异常关机",
   application: "游戏 / 应用崩溃",
   storage: "存储健康告警",

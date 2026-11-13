@@ -92,6 +92,15 @@ fn get_backend_capabilities(
     })
 }
 #[tauri::command]
+async fn get_hardware_info(
+    window: WebviewWindow,
+) -> Result<sentinel_core::hardware::HardwareSnapshot> {
+    access(&window)?;
+    tauri::async_runtime::spawn_blocking(sentinel_core::hardware::collect)
+        .await
+        .map_err(|_| "硬件信息读取失败。")?
+}
+#[tauri::command]
 fn create_case(
     window: WebviewWindow,
     state: State<AppStore>,
@@ -449,6 +458,71 @@ fn export_case(
         .map_err(|_| "案例服务不可用。")?
         .export(request)
 }
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct OpenSettingsRequest {
+    uri: String,
+}
+
+#[cfg(windows)]
+fn shell_open_ms_settings(uri: &str) -> Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    #[link(name = "shell32")]
+    unsafe extern "system" {
+        fn ShellExecuteW(
+            hwnd: *mut core::ffi::c_void,
+            lp_operation: *const u16,
+            lp_file: *const u16,
+            lp_parameters: *const u16,
+            lp_directory: *const u16,
+            n_show_cmd: i32,
+        ) -> isize;
+    }
+    let op: Vec<u16> = std::ffi::OsStr::new("open")
+        .encode_wide()
+        .chain([0])
+        .collect();
+    let file: Vec<u16> = std::ffi::OsStr::new(uri).encode_wide().chain([0]).collect();
+    let res = unsafe {
+        ShellExecuteW(
+            std::ptr::null_mut(),
+            op.as_ptr(),
+            file.as_ptr(),
+            std::ptr::null(),
+            std::ptr::null(),
+            1,
+        )
+    };
+    if res <= 32 {
+        return Err(format!("无法打开 Windows 设置页面（错误码 {res}）。"));
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn open_windows_settings(window: WebviewWindow, request: OpenSettingsRequest) -> Result<()> {
+    access(&window)?;
+    const ALLOWED: &[&str] = &[
+        "ms-settings:powersleep",
+        "ms-settings:display",
+        "ms-settings:display-advanced",
+        "ms-settings:gaming-gamemode",
+        "ms-settings:display-advancedgraphics",
+        "ms-settings:storagesense",
+    ];
+    if !ALLOWED.contains(&request.uri.as_str()) {
+        return Err("仅允许跳转受信任的 Windows 系统设置页面。".into());
+    }
+    #[cfg(windows)]
+    {
+        shell_open_ms_settings(&request.uri)
+    }
+    #[cfg(not(windows))]
+    {
+        Err("仅在 Windows 桌面端支持直达系统设置。".into())
+    }
+}
+
 #[tauri::command]
 fn delete_case(window: WebviewWindow, state: State<AppStore>, request: CaseRequest) -> Result<()> {
     access(&window)?;
@@ -457,6 +531,25 @@ fn delete_case(window: WebviewWindow, state: State<AppStore>, request: CaseReque
         .lock()
         .map_err(|_| "案例服务不可用。")?
         .delete(&request.case_id)
+}
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct RenameCaseRequest {
+    case_id: String,
+    title: String,
+}
+#[tauri::command]
+fn rename_case(
+    window: WebviewWindow,
+    state: State<AppStore>,
+    request: RenameCaseRequest,
+) -> Result<CaseRecord> {
+    access(&window)?;
+    state
+        .store
+        .lock()
+        .map_err(|_| "案例服务不可用。")?
+        .rename_case(&request.case_id, &request.title)
 }
 
 pub fn run() {
@@ -474,6 +567,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_app_status,
             get_backend_capabilities,
+            get_hardware_info,
             create_case,
             create_setup_audit,
             get_case,
@@ -497,7 +591,9 @@ pub fn run() {
             configure_model,
             clear_model,
             export_case,
-            delete_case
+            delete_case,
+            rename_case,
+            open_windows_settings
         ])
         .run(tauri::generate_context!())
         .expect("Sentinel PC could not initialize");

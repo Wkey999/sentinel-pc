@@ -27,7 +27,9 @@ describe("最小权限工程配置", () => {
     const names = [
       ...backend.matchAll(/#\[tauri::command\]\s*(?:async\s+)?fn (\w+)/g),
     ].map((m) => m[1]!);
-    expect(names).toHaveLength(26);
+    expect(names).toHaveLength(29);
+    expect(names).toContain("rename_case");
+    expect(names).toContain("get_hardware_info");
     expect(names).toContain("create_setup_audit");
     const manifestNames = [...build.matchAll(/"(\w+)"/g)].map((m) => m[1]!);
     const allowedNames = [

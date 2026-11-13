@@ -141,6 +141,27 @@ impl Drop for Library {
 }
 struct Com(Handle);
 impl Com {
+    fn property(&self, key: u32) -> Option<Vec<u8>> {
+        unsafe {
+            let supported: unsafe extern "system" fn(Handle, u32) -> bool = self.function(5);
+            if !supported(self.0, key) {
+                return None;
+            }
+            let size: unsafe extern "system" fn(Handle, u32, *mut usize) -> i32 = self.function(7);
+            let mut n = 0usize;
+            if size(self.0, key, &mut n) < 0 || n == 0 || n > 4096 {
+                return None;
+            }
+            let mut bytes = vec![0u8; n];
+            let get: unsafe extern "system" fn(Handle, u32, usize, *mut c_void) -> i32 =
+                self.function(6);
+            if get(self.0, key, n, bytes.as_mut_ptr() as *mut c_void) < 0 {
+                None
+            } else {
+                Some(bytes)
+            }
+        }
+    }
     unsafe fn function<T: Copy>(&self, index: usize) -> T {
         unsafe {
             let table = *(self.0 as *const *const *const c_void);
@@ -262,6 +283,73 @@ impl Dxcore {
             }
             if complete { Some(false) } else { None }
         }
+    }
+}
+/// DXCore reports 64-bit dedicated memory; WMI AdapterRAM is only uint32.
+pub(super) fn hardware_graphics() -> Option<Vec<crate::hardware::HardwareItem>> {
+    let dx = Dxcore::new()?;
+    unsafe {
+        let create: unsafe extern "system" fn(
+            Handle,
+            u32,
+            *const Guid,
+            *const Guid,
+            *mut Handle,
+        ) -> i32 = dx.factory.function(3);
+        let mut list = std::ptr::null_mut();
+        if create(dx.factory.0, 1, &GRAPHICS, &LIST, &mut list) < 0 || list.is_null() {
+            return None;
+        }
+        let list = Com(list);
+        let count: unsafe extern "system" fn(Handle) -> u32 = list.function(4);
+        let n = count(list.0);
+        if n == 0 || n > 64 {
+            return None;
+        }
+        let get: unsafe extern "system" fn(Handle, u32, *const Guid, *mut Handle) -> i32 =
+            list.function(3);
+        let mut items = vec![];
+        for i in 0..n {
+            let mut handle = std::ptr::null_mut();
+            if get(list.0, i, &ADAPTER, &mut handle) < 0 || handle.is_null() {
+                return None;
+            }
+            let adapter = Com(handle);
+            if adapter.bool_property(11) == Some(false) {
+                continue;
+            }
+            let raw = adapter.property(2)?;
+            let name = String::from_utf8_lossy(raw.split(|b| *b == 0).next()?)
+                .trim()
+                .to_string();
+            let role = adapter.role();
+            let mut details = vec![
+                match role {
+                    Some("integrated") => "集成显卡",
+                    Some("discrete") => "独立显卡",
+                    _ => "显卡类型未报告",
+                }
+                .into(),
+            ];
+            let memory = adapter
+                .property(7)
+                .and_then(|v| v.try_into().ok())
+                .map(u64::from_ne_bytes);
+            match (role, memory) {
+                (Some("integrated"), _) => details.push("使用共享系统内存".into()),
+                (_, Some(n)) if n > 0 => details.push(format!(
+                    "驱动可见专用显存 {:.1} GiB（DXCore）",
+                    n as f64 / 1073741824.0
+                )),
+                _ => details.push("专用显存容量未报告".into()),
+            }
+            items.push(crate::hardware::HardwareItem {
+                name,
+                details,
+                problem: false,
+            });
+        }
+        if items.is_empty() { None } else { Some(items) }
     }
 }
 pub(super) fn collect(cancel: &Cancellation) -> Result<Collection> {
