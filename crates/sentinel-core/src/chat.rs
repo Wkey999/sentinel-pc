@@ -134,9 +134,9 @@ impl Store {
                 let check = report.audit_checks.iter().find(|c| c.metric == "refresh_rate" && c.object_id.as_ref() == key);
                 let current_hz = e.fields.get("currentRefreshHz").and_then(|s| s.parse::<f64>().ok()).filter(|hz| hz.is_finite() && (1.0..=1000.0).contains(hz));
                 let highest = check.and_then(|c| match c.assessment.as_str() { "no_issue_observed" => Some(true), "opportunity" => Some(false), _ => None });
-                serde_json::json!({"displayIndex":index+1,"observedAtUtc":e.observed_at_utc,"currentHz":current_hz,"width":e.fields.get("width"),"height":e.fields.get("height"),"atHighestRecognizedSameResolution":highest,"comparison":check.map(|c|&c.summary),"limitations":check.map(|c|&c.limitations)})
+                serde_json::json!({"displayIndex":index+1,"observedAtUtc":e.observed_at_utc,"observedAtCst":e.observed_at_utc.as_deref().map(to_china_time),"currentHz":current_hz,"width":e.fields.get("width"),"height":e.fields.get("height"),"atHighestRecognizedSameResolution":highest,"comparison":check.map(|c|&c.summary),"limitations":check.map(|c|&c.limitations)})
             }).collect();
-            serde_json::json!({"source":"saved_native_setup_audit","sourceCaseId":case_id,"reportGeneratedAtUtc":report.generated_at_utc,"olderThan24Hours":chrono::Utc::now().signed_duration_since(time).num_hours()>=24,"displays":displays,"auditChecks":checks,"limitations":"上次已保存的本机体检事实，不是实时采样。对已有字段直接回答并标注采集时间；除非用户要实时数据或设备/接线/设置已变化，不要要求重复检查。已识别同分辨率模式中的最高，不等于已证明面板所有模式的绝对上限。"})
+            serde_json::json!({"source":"saved_native_setup_audit","sourceCaseId":case_id,"reportGeneratedAtUtc":report.generated_at_utc,"reportGeneratedAtCst":to_china_time(&report.generated_at_utc),"olderThan24Hours":chrono::Utc::now().signed_duration_since(time).num_hours()>=24,"displays":displays,"auditChecks":checks,"limitations":"上次已保存的本机体检事实，不是实时采样。对已有字段直接回答并标注采集时间（使用北京时间 UTC+8）；除非用户要实时数据或设备/接线/设置已变化，不要要求重复检查。已识别同分辨率模式中的最高，不等于已证明面板所有模式的绝对上限。"})
         }))
     }
     pub fn save_chat_reply(
@@ -191,7 +191,7 @@ impl Store {
         let case_context = case.as_ref().map(|c| serde_json::json!({"symptom":c.symptom,"incidentStartUtc":c.incident_start_utc,"incidentEndUtc":c.incident_end_utc}));
         let report = case.and_then(|c| c.report);
         let report_context = report.map(|r| serde_json::json!({
-            "provenance":r.provenance,"generatedAtUtc":r.generated_at_utc,"findings":r.findings.into_iter().take(16).collect::<Vec<_>>(),
+            "provenance":r.provenance,"generatedAtUtc":r.generated_at_utc,"generatedAtCst":to_china_time(&r.generated_at_utc),"findings":r.findings.into_iter().take(16).collect::<Vec<_>>(),
             "auditChecks":r.audit_checks.into_iter().take(32).collect::<Vec<_>>(),
             "unknowns":r.unknowns.into_iter().take(16).collect::<Vec<_>>()
         }));
@@ -213,7 +213,11 @@ impl Store {
             text: request.message.trim().into(),
             origin: "user".into(),
         });
-        let mut context = serde_json::json!({"hardware":hardware,"machineFacts":machine_facts,"case":case_context,"report":report_context,"historyWindow":"仅携带最近最多6轮成功对话；更早内容未发送。"});
+        let current_time_cst = chrono::Utc::now()
+            .with_timezone(&cst_offset())
+            .format("%Y-%m-%d %H:%M:%S (北京时间 UTC+8)")
+            .to_string();
+        let mut context = serde_json::json!({"currentTimeCst":current_time_cst,"hardware":hardware,"machineFacts":machine_facts,"case":case_context,"report":report_context,"historyWindow":"仅携带最近最多6轮成功对话；更早内容未发送。"});
         crate::export::redact_value(&mut context);
         for m in &mut messages {
             let mut value = serde_json::Value::String(m.text.clone());
@@ -263,6 +267,18 @@ fn hardware_context(h: &HardwareSnapshot) -> Result<serde_json::Value> {
         })).collect::<Vec<_>>()
     })).collect();
     Ok(
-        serde_json::json!({"origin":h.origin,"collectedAtUtc":h.collected_at_utc,"computerModel":h.computer_model,"operatingSystem":h.operating_system,"groups":groups,"limitations":"缓存采集时刻的配置，非实时传感器；每组最多16个设备，细节有长度限制。"}),
+        serde_json::json!({"origin":h.origin,"collectedAtUtc":h.collected_at_utc,"collectedAtCst":to_china_time(&h.collected_at_utc),"computerModel":h.computer_model,"operatingSystem":h.operating_system,"groups":groups,"limitations":"缓存采集时刻的配置，非实时传感器；每组最多16个设备，细节有长度限制。"}),
     )
+}
+fn cst_offset() -> chrono::FixedOffset {
+    chrono::FixedOffset::east_opt(8 * 3600).expect("valid +08:00 offset")
+}
+fn to_china_time(rfc3339: &str) -> String {
+    chrono::DateTime::parse_from_rfc3339(rfc3339)
+        .map(|dt| {
+            dt.with_timezone(&cst_offset())
+                .format("%Y-%m-%d %H:%M:%S (北京时间 UTC+8)")
+                .to_string()
+        })
+        .unwrap_or_else(|_| rfc3339.to_string())
 }
