@@ -1516,7 +1516,7 @@ export function DiagnosePage({
               >
                 <HStack gap={2} vAlign="start" width="100%">
                   <StackItem size="static">
-                    <Icon icon={ComputerDesktopIcon} size="sm" />
+                    <Icon icon={ComputerDesktopIcon} size="md" />
                   </StackItem>
                   <StackItem size="fill" style={{ minWidth: 0 }}>
                     <Heading level={4}>
@@ -1886,7 +1886,7 @@ export function DiagnosePage({
                       <VStack gap={3}>
                         <HStack hAlign="between" vAlign="center" width="100%">
                           <HStack gap={2} vAlign="center">
-                            <Icon icon={ShieldCheckIcon} size="md" />
+                            <Icon icon={ShieldCheckIcon} size="lg" />
                             <Heading level={4}>
                               本轮套餐式检查计划（R0 只读）
                             </Heading>
@@ -2151,7 +2151,7 @@ export function DiagnosePage({
                               width="100%"
                             >
                               <HStack gap={2} vAlign="center">
-                                <Icon icon={SparklesIcon} size="md" />
+                                <Icon icon={SparklesIcon} size="lg" />
                                 <Heading level={5}>AI 智能体综合解读</Heading>
                               </HStack>
                               <HStack gap={2} vAlign="center">

@@ -661,6 +661,57 @@ fn rename_case(
         .rename_case(&request.case_id, &request.title)
 }
 
+#[cfg(windows)]
+fn hide_window_titlebar_icon(window: &WebviewWindow) {
+    use std::ffi::c_void;
+    const WM_SETICON: u32 = 0x0080;
+    const ICON_SMALL: usize = 0;
+
+    #[link(name = "user32")]
+    unsafe extern "system" {
+        fn CreateIcon(
+            h_instance: *mut c_void,
+            n_width: i32,
+            n_height: i32,
+            c_planes: u8,
+            c_bits_pixel: u8,
+            lpb_and_bits: *const u8,
+            lpb_xor_bits: *const u8,
+        ) -> *mut c_void;
+        fn SendMessageW(
+            h_wnd: *mut c_void,
+            msg: u32,
+            w_param: usize,
+            l_param: isize,
+        ) -> isize;
+    }
+
+    if let Ok(hwnd) = window.hwnd() {
+        // 16x16 monochrome transparent icon hides the titlebar small icon without touching taskbar/EXE icons.
+        let and_mask = [0xFFu8; 32];
+        let xor_mask = [0x00u8; 32];
+        unsafe {
+            let transparent_icon = CreateIcon(
+                std::ptr::null_mut(),
+                16,
+                16,
+                1,
+                1,
+                and_mask.as_ptr(),
+                xor_mask.as_ptr(),
+            );
+            if !transparent_icon.is_null() {
+                SendMessageW(
+                    hwnd.0 as *mut c_void,
+                    WM_SETICON,
+                    ICON_SMALL,
+                    transparent_icon as isize,
+                );
+            }
+        }
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
@@ -671,6 +722,10 @@ pub fn run() {
             app.manage(Arc::new(
                 Backend::new(store).with_model_settings(path.join("model.dpapi")),
             ));
+            if let Some(main_window) = app.get_webview_window("main") {
+                #[cfg(windows)]
+                hide_window_titlebar_icon(&main_window);
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -153,7 +153,7 @@ export function HardwarePage({ onAudit }: { onAudit: () => void }) {
                   <Section padding={5} style={surfaceStyle}>
                     <VStack gap={2}>
                       <HStack gap={2} vAlign="center">
-                        <Icon icon={ComputerDesktopIcon} size="sm" />
+                        <Icon icon={ComputerDesktopIcon} size="md" />
                         <Text color="secondary">电脑型号</Text>
                       </HStack>
                       <Heading level={3}>
@@ -173,7 +173,7 @@ export function HardwarePage({ onAudit }: { onAudit: () => void }) {
                 <Section padding={0} style={surfaceStyle}>
                   <VStack padding={4} gap={2}>
                     <HStack gap={2} vAlign="center">
-                      <Icon icon={CpuChipIcon} size="sm" />
+                      <Icon icon={CpuChipIcon} size="md" />
                       <Heading level={3}>硬件总览</Heading>
                     </HStack>
                     <Text type="supporting" color="secondary">

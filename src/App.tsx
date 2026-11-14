@@ -8,7 +8,6 @@ import { CodeBlock } from "@astryxdesign/core/CodeBlock";
 import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
 import { Divider } from "@astryxdesign/core/Divider";
 import { Icon } from "@astryxdesign/core/Icon";
-import { NavIcon } from "@astryxdesign/core/NavIcon";
 import {
   SideNav,
   SideNavHeading,
@@ -24,9 +23,9 @@ import {
   ComputerDesktopIcon,
   EllipsisHorizontalIcon,
   PlusIcon,
-  ShieldCheckIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
+import appIconUrl from "./assets/app-icon.png";
 import type {
   AppStatus,
   BackendCapabilities,
@@ -248,9 +247,19 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
           resizable={{ defaultWidth: 268, minWidth: 220, maxWidth: 360 }}
           header={
             <SideNavHeading
-              heading="Sentinel PC · 哨兵"
+              heading="Sentinel PC · 深度摸鱼"
               icon={
-                <NavIcon icon={<Icon icon={ShieldCheckIcon} size="sm" />} />
+                <img
+                  src={appIconUrl}
+                  alt="深度摸鱼"
+                  style={{
+                    width: "3rem",
+                    height: "3rem",
+                    objectFit: "contain",
+                    display: "block",
+                    filter: "drop-shadow(0 2px 6px rgba(62, 107, 176, 0.16))",
+                  }}
+                />
               }
               headingHref="#"
             />

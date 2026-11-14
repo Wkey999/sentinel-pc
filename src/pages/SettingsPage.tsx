@@ -15,6 +15,7 @@ import { Thumbnail } from "@astryxdesign/core/Thumbnail";
 import { backgrounds, type BackgroundId } from "../domain/appearance";
 import type { AppStatus, BackendCapabilities } from "../domain/contracts";
 import { diagnostics } from "../services/diagnostics";
+import brandEmblemUrl from "../assets/brand-emblem.png";
 
 interface SettingsPageProps {
   status?: AppStatus;
@@ -418,7 +419,25 @@ export function SettingsPage({
             {section === "about" ? (
               <Card variant="default" padding={5}>
                 <VStack gap={3}>
-                  <Heading level={4}>Sentinel PC · 哨兵</Heading>
+                  <HStack gap={3} align="center">
+                    <img
+                      src={brandEmblemUrl}
+                      alt="Sentinel PC 徽标"
+                      style={{
+                        width: "2.75rem",
+                        height: "2.75rem",
+                        objectFit: "contain",
+                        display: "block",
+                        filter: "drop-shadow(0 2px 6px rgba(62, 107, 176, 0.18))",
+                      }}
+                    />
+                    <VStack gap={1}>
+                      <Heading level={4}>Sentinel PC · 深度摸鱼</Heading>
+                      <Text size="sm" color="secondary">
+                        Windows 桌面智能故障诊断与系统巡检助手
+                      </Text>
+                    </VStack>
+                  </HStack>
                   <Divider />
                   <Text size="sm" color="secondary">
                     面向普通游戏玩家与日常办公用户的 Windows 桌面智能故障诊断

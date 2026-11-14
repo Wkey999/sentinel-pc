@@ -18,7 +18,7 @@ impl HttpTransport for Transport {
             .as_str()
             .unwrap();
         let answer = if last.contains("你是谁") {
-            "我是哨兵的 AI 助手。"
+            "我是深度摸鱼的 AI 助手。"
         } else {
             "根据本机快照，你的系统是 Windows 11。"
         };
@@ -48,7 +48,7 @@ fn actual_chat_provider_receives_question_inventory_and_previous_turns() {
     let (c, input) = store.chat_input(&r).unwrap();
     let reply = gateway.chat(input, true);
     assert_eq!(reply.origin, "model");
-    assert!(reply.text.contains("哨兵"));
+    assert!(reply.text.contains("深度摸鱼"));
     store.save_chat_reply(&r, c.messages.len(), reply).unwrap();
     let mut r = request(&id, "我的电脑系统是什么？邮箱 user@example.com");
     r.hardware=Some(serde_json::from_value(json!({"origin":"windows_native","collectedAtUtc":"2026-11-14T00:00:00Z","computerModel":"Test laptop","operatingSystem":"Windows 11","groups":[{"id":"cpu","label":"处理器","status":"available","items":[{"name":"Test CPU","details":[],"problem":false}]}]})).unwrap());
@@ -67,7 +67,7 @@ fn actual_chat_provider_receives_question_inventory_and_previous_turns() {
     let captured = transport.0.lock().unwrap();
     assert_eq!(captured.len(), 2);
     assert!(captured[1]["messages"].to_string().contains("Windows 11"));
-    assert!(captured[1]["messages"].to_string().contains("我是哨兵"));
+    assert!(captured[1]["messages"].to_string().contains("我是深度摸鱼"));
     assert!(captured[1].get("response_format").is_none());
     assert!(captured[1].get("tools").is_none());
     assert_eq!(captured[1]["stream"], false);

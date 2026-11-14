@@ -21,7 +21,7 @@ const conversation = {
   updatedAtUtc: "2026-11-14T00:00:00Z",
   messages: [
     { role: "user", text: "你是谁？", origin: "user" },
-    { role: "assistant", text: "我是哨兵 AI 助手。", origin: "model" },
+    { role: "assistant", text: "我是深度摸鱼 AI 助手。", origin: "model" },
   ],
 };
 beforeEach(() => { native.invoke.mockReset(); });
@@ -32,7 +32,7 @@ it("普通问题通过原生聊天命令发送，不复用报告解释命令", a
   expect(native.invoke).toHaveBeenCalledExactlyOnceWith("send_chat", {
     request,
   });
-  expect(result.messages[1]?.text).toContain("哨兵");
+  expect(result.messages[1]?.text).toContain("深度摸鱼");
 });
 it("原生模型错误不会静默切换为浏览器模拟回答", async () => {
   native.invoke.mockRejectedValue(new Error("模型服务失败"));
