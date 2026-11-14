@@ -1,5 +1,7 @@
 # Sentinel PC 后端交接与需求校准说明（给接手 AI）
 
+> 2026-11-14 增量：已新增独立多轮 AI 对话、SQLite 消息保存、HWiNFO 英文 CSV 导入与工具补证入口。新 IPC、预算及尚未验收的边界见 [AI 问答与工具补证](AI_CHAT_AND_TOOLS.md)。下文保留原基线历史，不能用其旧能力表判断当前功能。
+
 核对日期：2026-11-13。代码基线：`a6ec45d2fd2a0e87c299c2688da6f7c414a10103`。本文为该基线的说明文档，后续代码变化需重新核实。
 
 仓库：<https://github.com/Wkey999/sentinel-pc>。本地目录：`D:\文档\ChatGPT\哨兵`。

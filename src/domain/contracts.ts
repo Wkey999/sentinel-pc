@@ -347,7 +347,21 @@ export const explanationSchema = z.strictObject({
 export const reportFormatSchema = z.enum([
   "smartctl_json",
   "crystal_disk_info_text",
+  "hwinfo_csv",
 ]);
+export const chatMessageSchema = z.strictObject({
+  role: z.enum(["user", "assistant"]),
+  text: z.string(),
+  origin: z.enum(["user", "model", "unavailable", "browser_preview"]),
+});
+export const conversationSchema = z.strictObject({
+  id: z.string().uuid(),
+  caseId: z.string().uuid().nullable(),
+  title: z.string(),
+  messages: z.array(chatMessageSchema),
+  updatedAtUtc: z.string(),
+});
+export type Conversation = z.infer<typeof conversationSchema>;
 export const importRequestSchema = z.strictObject({
   caseId: z.string().uuid(),
   format: reportFormatSchema,

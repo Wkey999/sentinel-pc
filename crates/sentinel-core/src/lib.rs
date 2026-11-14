@@ -1,5 +1,6 @@
 pub mod artifacts;
 mod calibrated_store;
+pub mod chat;
 pub mod collectors;
 pub mod diagnostics;
 pub mod domain;
@@ -147,6 +148,7 @@ impl Store {
             .map_err(storage_error)?;
         conn.execute_batch("PRAGMA foreign_keys=ON;
           CREATE TABLE IF NOT EXISTS cases(id TEXT PRIMARY KEY, body TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS conversations(id TEXT PRIMARY KEY, case_id TEXT REFERENCES cases(id) ON DELETE CASCADE, body TEXT NOT NULL, updated_at TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS consents(token TEXT PRIMARY KEY, case_id TEXT NOT NULL REFERENCES cases(id) ON DELETE CASCADE, plan_hash TEXT NOT NULL, expires_at TEXT NOT NULL, consumed INTEGER NOT NULL DEFAULT 0);
           CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY, case_id TEXT NOT NULL REFERENCES cases(id) ON DELETE CASCADE, plan_hash TEXT NOT NULL, status TEXT NOT NULL, UNIQUE(case_id,plan_hash));
           CREATE TABLE IF NOT EXISTS artifacts(id TEXT PRIMARY KEY, case_id TEXT NOT NULL REFERENCES cases(id) ON DELETE CASCADE, run_id TEXT NOT NULL, size_bytes INTEGER NOT NULL, body TEXT NOT NULL);

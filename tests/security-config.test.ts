@@ -27,10 +27,18 @@ describe("最小权限工程配置", () => {
     const names = [
       ...backend.matchAll(/#\[tauri::command\]\s*(?:async\s+)?fn (\w+)/g),
     ].map((m) => m[1]!);
-    expect(names).toHaveLength(29);
+    expect(names).toHaveLength(33);
     expect(names).toContain("rename_case");
     expect(names).toContain("get_hardware_info");
     expect(names).toContain("create_setup_audit");
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "get_chat",
+        "list_chats",
+        "delete_chat",
+        "send_chat",
+      ]),
+    );
     const manifestNames = [...build.matchAll(/"(\w+)"/g)].map((m) => m[1]!);
     const allowedNames = [
       ...permissions.split("commands.allow =")[1]!.matchAll(/"(\w+)"/g),

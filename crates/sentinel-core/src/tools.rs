@@ -44,6 +44,10 @@ impl ToolRegistry {
                     "crystal_disk_info",
                     root.join(r"CrystalDiskInfo\DiskInfo64.exe"),
                 ));
+                paths.push(("hwinfo", root.join(r"HWiNFO64\HWiNFO64.EXE")));
+                paths.push(("cpu_z", root.join(r"CPUID\CPU-Z\cpuz.exe")));
+                paths.push(("gpu_z", root.join(r"GPU-Z\GPU-Z.exe")));
+                paths.push(("occt", root.join(r"OCCT\OCCT.exe")));
             }
         }
         if let Some(root) = toolbox {
@@ -59,6 +63,53 @@ impl ToolRegistry {
             ] {
                 paths.push((id, root.join(relative)));
             }
+            // Bounded discovery of common toolbox layouts. Never follow reparse points or execute.
+            let mut directories = vec![(root, 0)];
+            let mut visited = 0;
+            while let Some((directory, depth)) = directories.pop() {
+                let Ok(entries) = std::fs::read_dir(&directory) else {
+                    continue;
+                };
+                for entry in entries {
+                    visited += 1;
+                    if visited > 2000 {
+                        return Err("工具箱目录超过 2000 个条目，请指定更小的工具子目录。".into());
+                    }
+                    let Ok(entry) = entry else {
+                        continue;
+                    };
+                    let Ok(meta) = entry.metadata() else {
+                        continue;
+                    };
+                    #[cfg(windows)]
+                    {
+                        use std::os::windows::fs::MetadataExt;
+                        if meta.file_attributes() & 0x400 != 0 {
+                            continue;
+                        }
+                    }
+                    if entry.file_type().map_or(true, |t| t.is_symlink()) {
+                        continue;
+                    }
+                    if meta.is_dir() && depth < 3 {
+                        directories.push((entry.path(), depth + 1));
+                    }
+                    if !meta.is_file() {
+                        continue;
+                    }
+                    let name = entry.file_name().to_string_lossy().to_ascii_lowercase();
+                    let id = match name.as_str() {
+                        "smartctl.exe" => "smartctl",
+                        "diskinfo64.exe" | "diskinfo32.exe" => "crystal_disk_info",
+                        "hwinfo64.exe" | "hwinfo32.exe" => "hwinfo",
+                        "cpuz_x64.exe" | "cpuz_x32.exe" | "cpuz.exe" => "cpu_z",
+                        "gpu-z.exe" => "gpu_z",
+                        "occt.exe" => "occt",
+                        _ => continue,
+                    };
+                    paths.push((id, entry.path()));
+                }
+            }
         }
         let mut result = Vec::new();
         for (id, path) in paths {
@@ -72,6 +123,12 @@ impl ToolRegistry {
                 continue;
             }
             let path = crate::artifacts::checked_local_path(&path)?;
+            if result
+                .iter()
+                .any(|t: &ToolCandidate| t.display_path == path.to_string_lossy())
+            {
+                continue;
+            }
             let hash = format!("{:x}", Sha256::digest(&bytes));
             if let Some((existing, _)) = self
                 .tools
@@ -85,8 +142,8 @@ impl ToolRegistry {
                 return Err("工具发现缓存已满，请重启后重试。".into());
             }
             let candidate=ToolCandidate { token:uuid::Uuid::new_v4().to_string(),tool_id:id.into(),display_path:path.to_string_lossy().into(),sha256:hash,version:file_version(&path),
-                status:"candidate_unverified".into(),integration:if id=="smartctl" {"local_cli"} else {"import_only"}.into(),
-                notice:"仅发现本地文件；未运行、未验证发行来源或版本。请核对来源和哈希；外部只读查询也可能唤醒磁盘，需独立确认。CrystalDiskInfo 目前仅导入报告。".into()};
+                status:"candidate_unverified".into(),integration:if id=="smartctl" {"local_cli"} else if ["crystal_disk_info","hwinfo"].contains(&id) {"import_only"} else {"manual_only"}.into(),
+                notice:"仅发现本地文件；未运行、未验证发行来源。smartctl 仅独立确认后只读查询；CDI/HWiNFO 仅导入支持的报告；CPU-Z/GPU-Z/OCCT 需用户外部手动操作，不自动烤机。".into()};
             self.tools
                 .insert(candidate.token.clone(), (candidate.clone(), path));
             drop(file);

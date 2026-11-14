@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
+import { Divider } from "@astryxdesign/core/Divider";
+import { Icon } from "@astryxdesign/core/Icon";
 import { Layout, LayoutContent, LayoutHeader } from "@astryxdesign/core/Layout";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { HStack, StackItem, VStack } from "@astryxdesign/core/Stack";
 import { StatusDot, type StatusDotVariant } from "@astryxdesign/core/StatusDot";
 import { Tab, TabList } from "@astryxdesign/core/TabList";
 import {
@@ -15,115 +17,252 @@ import {
   TableRow,
 } from "@astryxdesign/core/Table";
 import { Heading, Text } from "@astryxdesign/core/Text";
-import { TextInput } from "@astryxdesign/core/TextInput";
-import { Icon } from "@astryxdesign/core/Icon";
 import { Token } from "@astryxdesign/core/Token";
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-} from "@heroicons/react/24/outline";
-import type { BackendCapabilities, ToolCandidate } from "../domain/contracts";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import type {
+  BackendCapabilities,
+  CaseRecord,
+  ReportFormat,
+} from "../domain/contracts";
 import { diagnostics } from "../services/diagnostics";
 
 interface ToolEntry {
   id: string;
   name: string;
-  category: "native" | "storage" | "telemetry";
-  integrationMode: string;
+  category: "native" | "storage" | "telemetry" | "stress";
+  tubaLocation: string;
+  capabilityNote: string;
   statusDot: StatusDotVariant;
   statusLabel: string;
-  license: string;
-  capabilityNote: string;
-  officialUrl: string;
+  importFormat?: ReportFormat;
+  importButtonLabel?: string;
+  actionBadgeLabel?: string;
 }
 
 const TOOL_CATALOG: ToolEntry[] = [
   {
     id: "win-events",
-    name: "Windows 事件日志与系统概况",
+    name: "Windows 硬件快照与事件日志（系统内置）",
     category: "native",
-    integrationMode: "系统内置只读采集 (R0)",
-    statusDot: "warning",
-    statusLabel: "待接入原生采集器（当前为合成样本演示）",
-    license: "Windows 系统内置组件",
+    tubaLocation: "系统内置",
     capabilityNote:
-      "读取 System / Application / WHEA / Display / USB 事件窗口与硬件驱动概况，不读取 Security 日志。",
-    officialUrl:
-      "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent",
-  },
-  {
-    id: "smartctl",
-    name: "smartmontools (smartctl)",
-    category: "storage",
-    integrationMode: "自动发现受控运行 + JSON 导入",
-    statusDot: "accent",
-    statusLabel: "后端纯解析器已就绪 (v7.2–7.5 JSON)，待串联导入/CLI",
-    license: "GPL-2.0-or-later（不随安装包分发）",
-    capabilityNote:
-      "识别 ATA / NVMe / SCSI 设备 SMART 属性与位掩码退出码；若本机已安装，经确认后只读调用。",
-    officialUrl: "https://www.smartmontools.org/",
+      "自动读取本机配置、显示器连接通路、高刷档位，以及蓝屏/黑屏掉驱动/强行重启前后的 Windows 系统事件记录。",
+    statusDot: "success",
+    statusLabel: "桌面端已接入只读采集",
+    actionBadgeLabel: "已集成至「一键体检」",
   },
   {
     id: "crystaldiskinfo",
-    name: "CrystalDiskInfo",
+    name: "CrystalDiskInfo / DiskInfo（硬盘健康检测）",
     category: "storage",
-    integrationMode: "文本报告导入 + 目录发现",
-    statusDot: "accent",
-    statusLabel: "后端纯解析器已就绪 (9.0–9.6 英文/简中文本)，待串联导入",
-    license: "MIT（不随安装包打包，保留版权声明）",
+    tubaLocation: "磁盘工具",
     capabilityNote:
-      "支持多盘健康声明、温度、通电次数与通电时间解析，导入时保留原始校验哈希。",
-    officialUrl: "https://crystalmark.info/en/software/crystaldiskinfo/",
+      "查看固态/机械硬盘健康度百分比、温度、通电时间，重点看「0E（媒体与数据完整性错误）」或「05/C5」是否为 0。",
+    statusDot: "accent",
+    statusLabel: "支持导出 .txt 一键导入分析",
+    importFormat: "crystal_disk_info_text",
+    importButtonLabel: "导入 .txt 报告",
   },
   {
     id: "hwinfo",
-    name: "HWiNFO64",
+    name: "HWiNFO64（传感器温度与功耗监控）",
     category: "telemetry",
-    integrationMode: "手动外部运行 + 报告导入（规划中）",
-    statusDot: "neutral",
-    statusLabel: "第二批次候选（遵循官方免费/Pro 授权边界）",
-    license: "专有软件（自动 CLI 属 Pro 授权，不绕过限制）",
+    tubaLocation: "综合 / 其他工具",
     capabilityNote:
-      "用于传感器温度、电压与功耗异常排查，不在免费版上使用自动点击或旁路破解。",
-    officialUrl: "https://www.hwinfo.com/",
+      "实时查看 CPU 封装温度、显卡核心/热点温度、功耗以及是否触发过热降频（Thermal Throttling）。",
+    statusDot: "accent",
+    statusLabel: "支持导出英文 .csv 日志导入",
+    importFormat: "hwinfo_csv",
+    importButtonLabel: "导入 .csv 日志",
   },
   {
-    id: "presentmon",
-    name: "Intel PresentMon",
+    id: "cpuz",
+    name: "CPU-Z（处理器、主板与内存核对）",
     category: "telemetry",
-    integrationMode: "CSV 导入 / 受限帧时间采集（规划中）",
+    tubaLocation: "CPU工具",
+    capabilityNote:
+      "在「内存 (Memory)」页核对是否开启双通道、观察「DRAM 频率」（DDR4/DDR5 实际频率 = 显示值 × 2），在「SPD」页查看内存颗粒品牌。",
     statusDot: "neutral",
-    statusLabel: "第二批次候选",
-    license: "MIT（需分别核对 Console/Service 依赖）",
-    capabilityNote: "用于游戏卡顿、掉帧与渲染管线延迟分析。",
-    officialUrl: "https://github.com/GameTechDev/PresentMon",
+    statusLabel: "用于核对双通道与内存频率",
+    actionBadgeLabel: "在图吧工具箱手动查看",
+  },
+  {
+    id: "gpuz",
+    name: "GPU-Z（显卡参数与通道核对）",
+    category: "telemetry",
+    tubaLocation: "显卡工具",
+    capabilityNote:
+      "核对显卡真实流处理器数量（防假卡）、显存颗粒品牌（三星/海力士/镁光），以及「总线接口 (Bus Interface)」是否运行在正常 PCIe 通道。",
+    statusDot: "neutral",
+    statusLabel: "用于核对显卡通道与真伪",
+    actionBadgeLabel: "在图吧工具箱手动查看",
+  },
+  {
+    id: "aida64",
+    name: "AIDA64（内存跑分与单烤 FPU）",
+    category: "telemetry",
+    tubaLocation: "综合 / 内存工具",
+    capabilityNote:
+      "常用两项功能：①「工具 → 内存与缓存测试」看内存读写速度与延迟（Latency）；②「工具 → 系统稳定性测试」只勾选 Stress FPU 单烤测试 CPU 散热器压不压得住。",
+    statusDot: "neutral",
+    statusLabel: "适合查内存延迟与 CPU 散热",
+    actionBadgeLabel: "在图吧工具箱手动查看",
+  },
+  {
+    id: "furmark",
+    name: "FurMark 甜甜圈（显卡满载烤机）",
+    category: "stress",
+    tubaLocation: "烤机 / 显卡工具",
+    capabilityNote:
+      "让显卡满载运行 5–10 分钟，观察显卡温度是否过高、风扇是否异响，以及高负载下是否直接黑屏、闪退或重启（排查显卡散热与电源供电）。",
+    statusDot: "warning",
+    statusLabel: "高负载测试，请留意温度",
+    actionBadgeLabel: "按需短时手动测试",
+  },
+  {
+    id: "tm5",
+    name: "TestMem5 (TM5) / MemTest（内存稳定性测试）",
+    category: "stress",
+    tubaLocation: "内存 / 烤机工具",
+    capabilityNote:
+      "开启 XMP / EXPO 或手动超频内存后必测；若运行报错（Error > 0），说明内存频率或时序不稳，会导致游戏莫名闪退或蓝屏。",
+    statusDot: "warning",
+    statusLabel: "排查内存超频与游戏闪退",
+    actionBadgeLabel: "按需短时手动测试",
+  },
+  {
+    id: "asssd",
+    name: "AS SSD / CrystalDiskMark（固态硬盘测速）",
+    category: "storage",
+    tubaLocation: "磁盘工具",
+    capabilityNote:
+      "测试固态硬盘连续读写与 4K 随机读写速度，排查硬盘满盘掉速或插错低速 M.2 插槽。",
+    statusDot: "neutral",
+    statusLabel: "排查掉速与低速接口",
+    actionBadgeLabel: "在图吧工具箱手动查看",
   },
 ];
 
+const REPORT_TITLES: Record<ReportFormat, string> = {
+  crystal_disk_info_text: "CrystalDiskInfo 硬盘报告",
+  hwinfo_csv: "HWiNFO64 传感器日志",
+  smartctl_json: "smartctl SMART 报告",
+};
+
 interface ToolsPageProps {
   capabilities?: BackendCapabilities;
+  onCaseImported: (record: CaseRecord) => void;
+  onBusyChange: (busy: boolean) => void;
+  onRecordsChanged: () => Promise<void>;
 }
 
-export function ToolsPage({ capabilities }: ToolsPageProps) {
+export function ToolsPage({
+  capabilities,
+  onCaseImported,
+  onBusyChange,
+  onRecordsChanged,
+}: ToolsPageProps) {
   const [filter, setFilter] = useState<string>("all");
-  const [toolboxDir, setToolboxDir] = useState("");
-  const [probing, setProbing] = useState(false);
-  const [probeError, setProbeError] = useState("");
-  const [discovered, setDiscovered] = useState<ToolCandidate[] | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [activeFormat, setActiveFormat] = useState<ReportFormat | null>(null);
+  const [importError, setImportError] = useState("");
+  const [downloadNotice, setDownloadNotice] = useState("");
+  const [downloadError, setDownloadError] = useState("");
 
-  async function handleProbeTools() {
-    if (probing) return;
-    setProbing(true);
-    setProbeError("");
+  const canImport = Boolean(capabilities?.reportImportEnabled);
+
+  async function handleOpenTubaWebsite() {
+    setDownloadError("");
+    setDownloadNotice("");
     try {
-      const list = await diagnostics.probeTools(
-        toolboxDir.trim() ? toolboxDir.trim() : undefined,
+      const res = await diagnostics.openWindowsSettings("https://www.tbtool.cn/");
+      setDownloadNotice(
+        res.desktop
+          ? "已在系统默认浏览器打开图吧工具箱官网 (tbtool.cn)，可在官网选择 2026 最新版网盘链接下载解压。"
+          : "已为你打开图吧工具箱官网 (tbtool.cn)。",
       );
-      setDiscovered(list);
-    } catch (e) {
-      setProbeError(e instanceof Error ? e.message : "扫描本机工具失败。");
+    } catch (error) {
+      setDownloadError(
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+
+  async function importAndAnalyze(targetFormat: ReportFormat) {
+    if (importing || !canImport) return;
+    setImporting(true);
+    setActiveFormat(targetFormat);
+    setImportError("");
+    onBusyChange(true);
+    let created: CaseRecord | null = null;
+    try {
+      const now = Date.now();
+      created = await diagnostics.create({
+        category: targetFormat === "hwinfo_csv" ? "gaming_display" : "storage_io",
+        symptom: "外部工具报告补证；只分析主动选择的报告。",
+        incidentStartUtc: new Date(now - 60 * 60 * 1000).toISOString(),
+        incidentEndUtc: new Date(now).toISOString(),
+        displayTimezone: "Asia/Shanghai",
+        environment: "personal",
+      });
+      const selected = await diagnostics.importReport({
+        caseId: created.id,
+        format: targetFormat,
+      });
+      if (!selected) {
+        await diagnostics.delete(created.id);
+        created = null;
+        return;
+      }
+      await diagnostics.rename({
+        caseId: selected.id,
+        title: `外部报告 · ${REPORT_TITLES[targetFormat]}`,
+      });
+      const planned = await diagnostics.buildImportPlan(selected.id);
+      const p = planned.plan;
+      if (!p) {
+        throw new Error("未能生成报告解析计划。");
+      }
+      const consent = await diagnostics.approve({
+        caseId: planned.id,
+        planId: p.id,
+        planHash: p.hash,
+      });
+      let result = await diagnostics.start({
+        caseId: planned.id,
+        planId: p.id,
+        planHash: p.hash,
+        consentToken: consent.token,
+      });
+      for (
+        let i = 0;
+        i < 100 && ["collecting", "cancelling"].includes(result.status);
+        i++
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        result = await diagnostics.get(result.id);
+      }
+      if (["collecting", "cancelling"].includes(result.status)) {
+        throw new Error("报告仍在分析，可从左侧最近案例查看进度。");
+      }
+      onBusyChange(false);
+      onCaseImported(result);
+    } catch (error) {
+      setImportError(String(error));
+      if (created) {
+        try {
+          await diagnostics.delete(created.id);
+        } catch {
+          setImportError(
+            `${String(error)}；临时案例清理失败，可在最近案例删除。`,
+          );
+        }
+      }
     } finally {
-      setProbing(false);
+      setImporting(false);
+      setActiveFormat(null);
+      onBusyChange(false);
+      void onRecordsChanged();
     }
   }
 
@@ -138,9 +277,9 @@ export function ToolsPage({ capabilities }: ToolsPageProps) {
       header={
         <LayoutHeader>
           <VStack gap={1}>
-            <Heading level={2}>工具目录与来源边界</Heading>
+            <Heading level={2}>常用诊断工具与报告导入</Heading>
             <Text size="sm" color="secondary">
-              Sentinel PC 复用成熟工具而非自造底层驱动；不随安装包捆绑未授权二进制，所有受控运行均需你授权确认。
+              结合图吧工具箱等装机圈常用工具定位硬件与稳定性问题；所有导出的日志均在本机离线解析，不会私自运行第三方工具。
             </Text>
           </VStack>
         </LayoutHeader>
@@ -148,91 +287,144 @@ export function ToolsPage({ capabilities }: ToolsPageProps) {
       content={
         <LayoutContent padding={6}>
           <VStack gap={5}>
-            <Banner
-              status={capabilities?.realCollectionEnabled ? "success" : "info"}
-              title={
-                capabilities?.realCollectionEnabled
-                  ? "本机工具自动发现已就绪（仅扫描存在性与哈希，不自动运行）"
-                  : "关于自动发现与手动导入的说明"
-              }
-              description={
-                capabilities?.realCollectionEnabled
-                  ? "支持自动扫描 Program Files 及自定义工具箱目录中的 smartctl.exe 与 CrystalDiskInfo；发现后需经你确认才会受控执行或导入。"
-                  : "当前处于浏览器预览模式；在 Tauri 桌面端可点击下方按钮真实扫描本机合规工具。"
-              }
-            />
-
-            <Card variant="default" padding={4}>
+            <Card variant="default" padding={5}>
               <VStack gap={3}>
-                <HStack gap={3} vAlign="end" wrap="wrap" width="100%">
-                  <TextInput
-                    label="可选：额外工具箱目录（留空则扫描默认安装路径）"
-                    value={toolboxDir}
-                    onChange={setToolboxDir}
-                    placeholder="例如：D:\Tools\Hardware"
+                <HStack gap={4} hAlign="between" vAlign="center" width="100%" wrap="wrap">
+                  <StackItem size="fill">
+                    <VStack gap={1}>
+                      <HStack gap={2} vAlign="center" wrap="wrap">
+                        <Heading level={3}>获取图吧工具箱 2026 最新版</Heading>
+                        <Token size="sm" color="green" label="官网直达下载" />
+                      </HStack>
+                      <Text size="sm" color="secondary">
+                        图吧工具箱整合了数十款硬件检测软件（整包约 2–3 GB），Sentinel PC 为保持轻量不捆绑分发；点击右侧按钮直接在浏览器打开官网网盘下载解压，之后即可把报告导入下方解析。
+                      </Text>
+                    </VStack>
+                  </StackItem>
+                  <StackItem size="static">
+                    <Button
+                      variant="secondary"
+                      icon={<Icon icon={ArrowTopRightOnSquareIcon} size="sm" />}
+                      label="前往官网下载最新版 (tbtool.cn)"
+                      onClick={() => void handleOpenTubaWebsite()}
+                    />
+                  </StackItem>
+                </HStack>
+                {downloadNotice ? (
+                  <Banner
+                    status="success"
+                    title="已跳转图吧工具箱官网"
+                    description={downloadNotice}
+                  />
+                ) : null}
+                {downloadError ? (
+                  <Banner
+                    status="error"
+                    title="未能打开图吧工具箱官网"
+                    description={downloadError}
+                  />
+                ) : null}
+              </VStack>
+            </Card>
+
+            <Card variant="default" padding={5}>
+              <VStack gap={3}>
+                <HStack hAlign="between" vAlign="center" width="100%" wrap="wrap">
+                  <Heading level={3}>
+                    导入图吧工具箱 / 第三方检测报告（本机离线解析）
+                  </Heading>
+                  <Token size="sm" color="blue" label="本机离线解析" />
+                </HStack>
+                <VStack gap={1.5}>
+                  <Text size="sm">
+                    •{" "}
+                    <Text weight="semibold" display="inline">
+                      硬盘健康报告（CrystalDiskInfo / DiskInfo）：
+                    </Text>
+                    在「图吧工具箱 → 磁盘工具」打开 DiskInfo，点击顶部菜单「文件 → 保存(文本)」（或按 Ctrl + T）导出 .txt 后导入，自动检查健康度、温度与 0E/05 坏道告警。
+                  </Text>
+                  <Text size="sm">
+                    •{" "}
+                    <Text weight="semibold" display="inline">
+                      温度与功耗曲线日志（HWiNFO64）：
+                    </Text>
+                    在「图吧工具箱 → 综合/其他工具」打开 HWiNFO64（勾选 Sensors-only 仅传感器），点击右下角「开始记录日志」保存 .csv，复现掉帧或高热后导入分析。
+                  </Text>
+                </VStack>
+                <Divider />
+                <HStack gap={3} wrap="wrap" vAlign="center">
+                  <Button
+                    variant="primary"
+                    label={
+                      importing && activeFormat === "crystal_disk_info_text"
+                        ? "正在分析 DiskInfo 报告…"
+                        : "导入 DiskInfo 硬盘报告 (.txt)"
+                    }
+                    isDisabled={importing || !canImport}
+                    onClick={() => void importAndAnalyze("crystal_disk_info_text")}
                   />
                   <Button
-                    label={probing ? "扫描中…" : "扫描本机合规工具"}
-                    variant="primary"
-                    icon={<Icon icon={ArrowPathIcon} size="sm" />}
-                    isDisabled={probing}
-                    onClick={() => void handleProbeTools()}
+                    variant="secondary"
+                    label={
+                      importing && activeFormat === "hwinfo_csv"
+                        ? "正在分析 HWiNFO64 日志…"
+                        : "导入 HWiNFO64 传感器日志 (.csv)"
+                    }
+                    isDisabled={importing || !canImport}
+                    onClick={() => void importAndAnalyze("hwinfo_csv")}
+                  />
+                  <Button
+                    variant="ghost"
+                    label={
+                      importing && activeFormat === "smartctl_json"
+                        ? "正在分析 smartctl 报告…"
+                        : "导入 smartctl 报告 (.json)"
+                    }
+                    isDisabled={importing || !canImport}
+                    onClick={() => void importAndAnalyze("smartctl_json")}
                   />
                 </HStack>
-                {probeError ? (
-                  <Banner status="error" title={probeError} />
-                ) : null}
-                {discovered !== null ? (
-                  discovered.length === 0 ? (
-                    <Text size="sm" color="secondary">
-                      未在默认路径或指定目录中发现受支持的 smartctl / CrystalDiskInfo 可执行文件。
-                    </Text>
-                  ) : (
-                    <VStack gap={2}>
-                      {discovered.map((tool) => (
-                        <HStack
-                          key={tool.token}
-                          gap={2}
-                          hAlign="between"
-                          vAlign="center"
-                          width="100%">
-                          <VStack gap={0.5}>
-                            <Text size="sm" weight="medium">
-                              {tool.toolId} · {tool.displayPath}
-                            </Text>
-                            <Text type="supporting" color="secondary">
-                              {tool.notice}
-                            </Text>
-                          </VStack>
-                          <Token
-                            size="sm"
-                            color="blue"
-                            label={`${tool.integration} · ${tool.version ?? tool.sha256.slice(0, 8)}`}
-                          />
-                        </HStack>
-                      ))}
-                    </VStack>
-                  )
+                {!canImport ? (
+                  <Text size="sm" color="secondary">
+                    当前处于浏览器预览模式，请在 Sentinel PC 桌面端选择本地报告文件进行分析。
+                  </Text>
+                ) : (
+                  <Text size="sm" color="secondary">
+                    选择文件后将直接在本机完成解析并生成独立分析报告；不会修改原文件，也不会自动上传 AI。
+                  </Text>
+                )}
+                {importError ? (
+                  <Banner
+                    status="error"
+                    title="报告导入未完成"
+                    description={importError}
+                  />
                 ) : null}
               </VStack>
             </Card>
 
             <TabList value={filter} onChange={setFilter} hasDivider>
-              <Tab value="all" label={`全部工具 (${TOOL_CATALOG.length})`} />
-              <Tab value="native" label="系统内置采集" />
-              <Tab value="storage" label="硬盘与存储" />
-              <Tab value="telemetry" label="温度 / 帧时间" />
+              <Tab value="all" label={`全部常用工具 (${TOOL_CATALOG.length})`} />
+              <Tab value="native" label="系统内置与体检" />
+              <Tab value="storage" label="磁盘工具（查硬盘）" />
+              <Tab value="telemetry" label="CPU / 显卡 / 内存工具" />
+              <Tab value="stress" label="烤机与稳定性测试" />
             </TabList>
 
             <Card variant="default" padding={0}>
-              <Table aria-label="支持与候选工具目录" density="balanced">
+              <Table
+                aria-label="图吧工具箱常用工具与报告联动目录"
+                density="balanced"
+                textOverflow="wrap"
+                verticalAlign="top"
+                dividers="rows"
+              >
                 <TableHeader>
                   <TableRow>
-                    <TableHeaderCell>工具 / 来源</TableHeaderCell>
-                    <TableHeaderCell>集成方式</TableHeaderCell>
-                    <TableHeaderCell>当前状态</TableHeaderCell>
-                    <TableHeaderCell>授权与边界</TableHeaderCell>
-                    <TableHeaderCell>官方来源</TableHeaderCell>
+                    <TableHeaderCell>工具名称与核心用途</TableHeaderCell>
+                    <TableHeaderCell>位置</TableHeaderCell>
+                    <TableHeaderCell>当前支持状态</TableHeaderCell>
+                    <TableHeaderCell>操作 / 联动方式</TableHeaderCell>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -249,7 +441,7 @@ export function ToolsPage({ capabilities }: ToolsPageProps) {
                         </VStack>
                       </TableCell>
                       <TableCell>
-                        <Token size="sm" label={tool.integrationMode} />
+                        <Token size="sm" color="blue" label={tool.tubaLocation} />
                       </TableCell>
                       <TableCell>
                         <HStack gap={1.5} vAlign="center">
@@ -261,20 +453,26 @@ export function ToolsPage({ capabilities }: ToolsPageProps) {
                         </HStack>
                       </TableCell>
                       <TableCell>
-                        <Text type="supporting" color="secondary">
-                          {tool.license}
-                        </Text>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          label="官网"
-                          variant="ghost"
-                          size="sm"
-                          icon={<Icon icon={ArrowTopRightOnSquareIcon} size="sm" />}
-                          href={tool.officialUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        />
+                        {tool.importFormat && tool.importButtonLabel ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            label={
+                              importing && activeFormat === tool.importFormat
+                                ? "分析中…"
+                                : tool.importButtonLabel
+                            }
+                            isDisabled={importing || !canImport}
+                            onClick={() =>
+                              void importAndAnalyze(tool.importFormat!)
+                            }
+                          />
+                        ) : (
+                          <Token
+                            size="sm"
+                            label={tool.actionBadgeLabel ?? "在图吧工具箱手动查看"}
+                          />
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

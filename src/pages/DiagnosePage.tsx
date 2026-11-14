@@ -9,6 +9,7 @@ import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
 import { Divider } from "@astryxdesign/core/Divider";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
 import {
   ChatLayout,
   ChatMessage,
@@ -38,23 +39,24 @@ import {
 } from "@heroicons/react/24/outline";
 import type {
   AppStatus,
+  AuditCheckResult,
   BackendCapabilities,
   CaseRecord,
   Explanation,
+  HardwareInfo,
 } from "../domain/contracts";
 import {
   buildConsolidatedSymptom,
   CATEGORY_PRESETS,
   detectCategoryFromText,
   getFollowupQuestions,
-  getPrioritizedNextSteps,
   SETUP_AUDIT_PRESET,
   type FollowupQuestion,
   type InterviewAnswer,
   type SymptomCategory,
 } from "../domain/interview";
 import { defaultCaseTitle, isSetupAudit } from "../domain/case-session";
-import { diagnostics } from "../services/diagnostics";
+import { diagnostics, modelReminder } from "../services/diagnostics";
 import { VoiceComposer } from "../components/VoiceComposer";
 
 interface DiagnosePageProps {
@@ -63,6 +65,9 @@ interface DiagnosePageProps {
   activeCase: CaseRecord | null;
   autoStartAudit?: boolean;
   isVisible?: boolean;
+  conversationId: string;
+  onChatsChanged: () => Promise<void>;
+  onOpenTools: () => void;
   onBusyChange?: (busy: boolean) => void;
   onNewSession?: () => void;
   onNewAudit?: () => void;
@@ -76,6 +81,7 @@ interface ChatTurn {
   role: "user" | "assistant";
   text: string;
   stream?: boolean;
+  origin?: string;
 }
 
 const preLineTextStyle: CSSProperties = {
@@ -96,21 +102,29 @@ function StreamingText({
   stream?: boolean;
   emphasis?: boolean;
 }) {
+  const prevTextRef = useRef(text);
   const [visibleLen, setVisibleLen] = useState(stream ? 0 : text.length);
 
   useEffect(() => {
+    const prev = prevTextRef.current;
+    prevTextRef.current = text;
     if (!stream) {
       setVisibleLen(text.length);
       return;
     }
-    setVisibleLen((prev) => (prev > text.length ? text.length : prev));
+    const isPrefixExtension = prev.length > 0 && text.startsWith(prev);
+    if (!isPrefixExtension) {
+      setVisibleLen(0);
+    } else {
+      setVisibleLen((v) => (v > text.length ? text.length : v));
+    }
     const timer = window.setInterval(() => {
-      setVisibleLen((prev) => {
-        if (prev >= text.length) {
+      setVisibleLen((prevLen) => {
+        if (prevLen >= text.length) {
           window.clearInterval(timer);
-          return prev;
+          return prevLen;
         }
-        return Math.min(text.length, prev + 6);
+        return Math.min(text.length, prevLen + 6);
       });
     }, 18);
     return () => window.clearInterval(timer);
@@ -141,6 +155,7 @@ const AUDIT_METRIC_LABELS: Record<string, string> = {
   output_adapter: "显卡输出通路",
   refresh_rate: "显示器刷新率",
   memory_speed: "内存运行频率",
+  memory_channels: "内存通道数",
   xmp_expo_profile: "内存 XMP / EXPO 配置",
   power_scheme: "电源计划",
   game_mode: "Windows 游戏模式",
@@ -169,7 +184,7 @@ const AUDIT_ACTION_META: Record<
     actionLabel: "直达 Windows 电源设置",
     commandToCopy: "ms-settings:powersleep",
     guideText:
-      "已为你打开 Windows「电源和电池」设置页，直接在「电源模式」下拉框选择「最佳性能」即可。",
+      "点击按钮打开电源设置，核对当前计划和使用场景；平衡计划并不等于异常。",
   },
   refresh_rate: {
     tier: "small_fix",
@@ -178,7 +193,7 @@ const AUDIT_ACTION_META: Record<
     actionLabel: "直达 Windows 高刷设置",
     commandToCopy: "ms-settings:display-advanced",
     guideText:
-      "已为你打开 Windows「高级显示」设置页，直接在「选择刷新率」下拉框调至最高 Hz 即可。",
+      "点击按钮打开高级显示，核对对应屏幕和当前连接可选的刷新率；不保证能使用面板最高档位。",
   },
   game_mode: {
     tier: "small_fix",
@@ -187,7 +202,7 @@ const AUDIT_ACTION_META: Record<
     actionLabel: "直达 Windows 游戏模式",
     commandToCopy: "ms-settings:gaming-gamemode",
     guideText:
-      "已为你打开 Windows「游戏模式」设置页，直接点击页面内的开关即可开启或关闭。",
+      "点击按钮打开游戏模式设置，核对配置与支持状态；开关不保证带来性能收益。",
   },
   hags: {
     tier: "small_fix",
@@ -209,40 +224,167 @@ const AUDIT_ACTION_META: Record<
   },
   output_adapter: {
     tier: "big_handoff",
-    badgeLabel: "物理接线边界 · 需手动换口",
+    badgeLabel: "显示输出 · 需核对接线",
     badgeColor: "orange",
     guideText:
-      "【物理接线问题 · 软件无法代劳】如果显示器线插在主板竖口（核显），请直接拔下机箱背后的显示器线，改插到下方横置的独立显卡接口上！",
+      "若为台式机，可核对显示器是否连接独显接口；笔记本混合显卡、扩展坞和内置屏不能据此判断插错。",
   },
   memory_speed: {
     tier: "big_handoff",
-    badgeLabel: "BIOS 硬件边界 · 不背锅",
+    badgeLabel: "内存设置 · 手动核对",
     badgeColor: "orange",
     guideText:
-      "【主板 BIOS 级设置 · 免费软件不强改防不开机】内存频率偏低需重启电脑狂按 Del / F2 进入主板 BIOS 开启 XMP / EXPO。",
+      "先对照 CPU、主板与内存支持规格核对当前速率；速率差异不证明未开启 XMP/EXPO，不直接要求超频。",
   },
   xmp_expo_profile: {
     tier: "big_handoff",
-    badgeLabel: "BIOS 硬件边界 · 不背锅",
+    badgeLabel: "内存设置 · 手动核对",
     badgeColor: "orange",
     guideText:
-      "【主板 BIOS 级设置 · 免费软件不强改防不开机】Windows 下无法直接改写 BIOS 超频配置，请重启进主板 BIOS 开启 XMP / EXPO。",
+      "在 BIOS 中手动核对档位与平台支持；无法读取开关状态时不建议直接开启超频。",
   },
   pcie_link: {
     tier: "big_handoff",
-    badgeLabel: "硬件插槽边界 · 甩锅售后",
+    badgeLabel: "链路状态 · 补充验证",
     badgeColor: "orange",
     guideText:
-      "【主板/显卡物理通道问题】若显卡未跑满 PCIe 通道，多为插在了第二根慢速槽或金手指接触不良，请重插显卡第一槽或找整机售后处理。",
+      "先核对当时负载、设备能力与插槽规格；空闲低速不证明插错或接触不良。",
   },
   thermal_power_limits: {
     tier: "big_handoff",
-    badgeLabel: "散热/供电硬伤 · 甩锅售后",
+    badgeLabel: "传感器记录 · 核对限制标志",
     badgeColor: "orange",
     guideText:
-      "【硬件散热/电源负载问题 · 软件不背锅】若出现温度撞墙或供电不足降频，属于硅脂干涸、风道积灰或电源功率不够，建议清灰换硅脂或导出报告找硬件售后！",
+      "日志中的限制标志只是一条线索。核对采样时段、负载和温度，不直接断言硅脂干涸、散热器故障或电源功率不足。",
   },
 };
+
+function formatFriendlyCheckSummary(chk: AuditCheckResult): string {
+  switch (chk.metric) {
+    case "output_adapter": {
+      if (chk.assessment === "no_issue_observed") {
+        return "显示器已直连独立显卡输出，画面通路正常。";
+      }
+      if (chk.assessment === "opportunity") {
+        return "检测到独立显卡，但当前屏幕接在主板核显口；如果是台式机，建议把显示器线改插到下方独显接口。";
+      }
+      return "当前为笔记本内置屏幕或混合输出模式，连接正常。";
+    }
+    case "refresh_rate": {
+      const hzMatch = chk.summary.match(/当前约\s*([\d.]+)\s*Hz/i);
+      const hz = hzMatch
+        ? Number(hzMatch[1]).toFixed(2).replace(/\.00$/, "")
+        : "";
+      if (chk.assessment === "no_issue_observed") {
+        return hz
+          ? `当前屏幕已运行在 ${hz}Hz 高刷新率模式，画面流畅。`
+          : "当前屏幕已运行在高刷新率模式，画面流畅。";
+      }
+      if (chk.assessment === "opportunity") {
+        return hz
+          ? `当前屏幕刷新率（${hz}Hz）未开到最高档位，可点击下方按钮在系统设置中调高。`
+          : "当前屏幕刷新率未开启到更高档位，可点击下方按钮在系统设置中调高。";
+      }
+      return hz
+        ? `当前屏幕刷新率约 ${hz}Hz，可在系统显示设置中查看可选档位。`
+        : "可在 Windows「高级显示」设置中查看当前屏幕刷新率。";
+    }
+    case "memory_speed": {
+      const spdMatch = chk.summary.match(/配置(?:速率)?字段(?:为)?\s*(\d+)/);
+      const speed = spdMatch ? spdMatch[1] : "";
+      if (chk.assessment === "no_issue_observed") {
+        return speed
+          ? `当前内存运行在 ${speed} MT/s 高频档位，工作正常。`
+          : "当前内存运行在标称高频档位，工作正常。";
+      }
+      if (chk.assessment === "opportunity") {
+        return speed
+          ? `当前内存运行在 ${speed} MT/s，低于内存条标称速率；可在主板 BIOS 中开启 XMP / EXPO 提升性能。`
+          : "当前内存运行频率偏低，可在主板 BIOS 中开启 XMP / EXPO 提升性能。";
+      }
+      return speed
+        ? `当前内存运行在默认稳定频率（${speed} MT/s）。`
+        : "当前内存运行在默认稳定频率。";
+    }
+    case "memory_channels": {
+      const countMatch = chk.summary.match(/读到\s*(\d+)\s*条/);
+      return countMatch
+        ? `已识别到 ${countMatch[1]} 根内存条，容量与插槽工作正常。`
+        : "已识别本机内存条信息，工作正常。";
+    }
+    case "xmp_expo_profile":
+      return "内存超频（XMP / EXPO）属于主板 BIOS 级设置，Windows 下仅作只读核对，日常使用无需改动。";
+    case "power_scheme": {
+      if (chk.summary.includes("高性能")) {
+        return "当前正在使用「高性能」电源模式。";
+      }
+      if (chk.summary.includes("平衡")) {
+        return "当前正在使用「平衡」电源模式，日常办公与游戏均可正常发挥性能。";
+      }
+      if (chk.summary.includes("节能") || chk.assessment === "opportunity") {
+        return "当前处于「节能」模式，玩大型游戏时可能会限制性能，建议切换为平衡或高性能。";
+      }
+      return "当前正在使用电脑厂商自带的自定义电源模式，运行正常；如需切换可点击右侧电源设置。";
+    }
+    case "game_mode": {
+      if (/\benabled\b|已开启/i.test(chk.summary)) {
+        return "Windows 游戏模式已开启。";
+      }
+      if (/\bdisabled\b|已关闭/i.test(chk.summary)) {
+        return "Windows 游戏模式当前为关闭状态，可按需开启。";
+      }
+      return "当前使用系统默认游戏模式设置，无需额外调整。";
+    }
+    case "hags": {
+      if (/\benabled\b|已开启/i.test(chk.summary)) {
+        return "硬件加速 GPU 调度已开启。";
+      }
+      if (/\bdisabled\b|已关闭/i.test(chk.summary)) {
+        return "硬件加速 GPU 调度当前为关闭状态。";
+      }
+      return "当前使用系统默认图形加速设置，无需额外调整。";
+    }
+    case "system_disk_free": {
+      const diskMatch = chk.summary.match(
+        /可用\s*(\d+)\s*\/\s*(\d+)\s*字节[^\d]*([\d.]+)%/,
+      );
+      const freeGb = diskMatch
+        ? (Number(diskMatch[1]) / 1024 ** 3).toFixed(0)
+        : "";
+      const totalGb = diskMatch
+        ? (Number(diskMatch[2]) / 1024 ** 3).toFixed(0)
+        : "";
+      const pct = diskMatch ? Number(diskMatch[3]).toFixed(0) : "";
+      if (chk.assessment === "opportunity") {
+        return diskMatch
+          ? `系统盘仅剩约 ${freeGb} GB（可用 ${pct}%），建议点击下方按钮清理系统盘临时文件。`
+          : "系统盘剩余空间不足 10%，建议点击下方按钮清理系统盘临时文件。";
+      }
+      if (chk.assessment === "no_issue_observed") {
+        return diskMatch
+          ? `系统盘剩余约 ${freeGb} GB / 共 ${totalGb} GB（可用 ${pct}%），空间充足。`
+          : "系统盘剩余空间充足。";
+      }
+      return "未能读取系统盘剩余空间，可在 Windows「存储」设置中查看。";
+    }
+    case "pcie_link":
+      return "显卡与固态硬盘连接正常（日常待机无需满载测试）。";
+    case "thermal_power_limits":
+      return "当前无异常过热告警；如遇玩游戏自动关机或严重掉帧，可从「工具与来源」导入温度记录分析。";
+    default:
+      return chk.summary.replace(/GUID=[0-9a-f-]+/gi, "").trim();
+  }
+}
+
+function dedupeAuditChecks(checks: AuditCheckResult[]): AuditCheckResult[] {
+  const seen = new Set<string>();
+  return checks.filter((chk) => {
+    const key = `${chk.metric}::${chk.assessment}::${formatFriendlyCheckSummary(chk)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 const rootStyle: CSSProperties = {
   height: "100%",
@@ -277,12 +419,27 @@ const homeComposerStyle: CSSProperties = {
   textAlign: "center",
 };
 
+const centeredInputStyle: CSSProperties = {
+  textAlign: "center",
+};
+
+const detailLabelStyle: CSSProperties = {
+  width: "4.5rem",
+};
+
+const minWidthZeroStyle: CSSProperties = {
+  minWidth: 0,
+};
+
 export function DiagnosePage({
   status: _status,
   capabilities,
   activeCase,
   autoStartAudit = false,
   isVisible = true,
+  conversationId,
+  onChatsChanged,
+  onOpenTools: _onOpenTools,
   onBusyChange,
   onNewSession,
   onNewAudit,
@@ -321,8 +478,100 @@ export function DiagnosePage({
   );
   const [aiExplanation, setAiExplanation] = useState<Explanation | null>(null);
   const [explainBusy, setExplainBusy] = useState(false);
+  const autoExplainedCaseRef = useRef<string | null>(null);
+  const [liveCapabilities, setLiveCapabilities] = useState<
+    BackendCapabilities | undefined
+  >(capabilities);
+  const [hardwareSnapshot, setHardwareSnapshot] = useState<
+    HardwareInfo | undefined
+  >(() => diagnostics.cachedHardware());
+  useEffect(() => {
+    setLiveCapabilities(capabilities);
+  }, [capabilities]);
+  useEffect(() => {
+    if (!isVisible) return;
+    void diagnostics
+      .hardware()
+      .then(setHardwareSnapshot)
+      .catch(() => undefined);
+    void diagnostics
+      .capabilities()
+      .then(setLiveCapabilities)
+      .catch(() => undefined);
+  }, [isVisible]);
+  const effectiveCapabilities = liveCapabilities ?? capabilities;
   const [agentActionFeedback, setAgentActionFeedback] = useState("");
   const [chatFollowups, setChatFollowups] = useState<ChatTurn[]>([]);
+  const [answerBusy, setAnswerBusy] = useState(false);
+  const answerPending = useRef(false);
+  const answerGeneration = useRef(0);
+  const [chatLoading, setChatLoading] = useState(true);
+  const [pendingConsent, setPendingConsent] = useState<string | null>(null);
+  const chatId = activeCase?.id ?? conversationId;
+  const streamedChatRef = useRef<string | null>(null);
+  const mapChat = (
+    messages: Array<{
+      role: "user" | "assistant";
+      text: string;
+      origin: string;
+    }>,
+    streamLast = false,
+  ): ChatTurn[] =>
+    messages.map((m, index) => ({
+      ...m,
+      id: `chat-${index}`,
+      stream:
+        streamLast && index === messages.length - 1 && m.role === "assistant",
+    }));
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (
+        e as CustomEvent<{ conversationId?: string; text?: string }>
+      ).detail;
+      if (!detail || detail.conversationId !== chatId || !detail.text) return;
+      streamedChatRef.current = chatId;
+      setChatFollowups((prev) =>
+        prev.map((turn) =>
+          turn.id.startsWith("waiting-") && turn.role === "assistant"
+            ? {
+                ...turn,
+                text: detail.text!,
+                origin: "model",
+                stream: true,
+              }
+            : turn,
+        ),
+      );
+    };
+    window.addEventListener("sentinel-chat-stream", handler);
+    return () => window.removeEventListener("sentinel-chat-stream", handler);
+  }, [chatId]);
+  useEffect(() => {
+    let current = true;
+    setChatLoading(true);
+    setChatFollowups([]);
+    void diagnostics
+      .getChat(chatId, activeCase?.id ?? null)
+      .then((c) => {
+        if (current) setChatFollowups(mapChat(c.messages));
+      })
+      .catch((e) => {
+        if (current) setErrorMsg(String(e));
+      })
+      .finally(() => {
+        if (current) setChatLoading(false);
+      });
+    return () => {
+      current = false;
+      answerGeneration.current++;
+    };
+  }, [chatId, activeCase?.id]);
+  useEffect(
+    () => () => {
+      answerGeneration.current++;
+    },
+    [],
+  );
 
   const workspaceRef = useRef<HTMLDivElement>(null);
   const resizable = useResizable({
@@ -365,30 +614,37 @@ export function DiagnosePage({
 
   const hardwareOverview = useMemo(() => {
     const ev = activeCase?.report?.evidence ?? [];
-    if (ev.length === 0) {
-      return {
-        modelInfo: "",
-        osInfo: "",
-        rows: [] as Array<{ label: string; value: string }>,
-      };
-    }
+    const snap = hardwareSnapshot;
 
     const cs = ev.find((e) => e.id.startsWith("Win32_ComputerSystem"));
     const csMfg = cs?.fields.Manufacturer?.trim() ?? "";
     const csModel = cs?.fields.Model?.trim() ?? "";
-    const modelInfo = csModel
+    const reportModelInfo = csModel
       ? csMfg &&
         !csModel.toLowerCase().startsWith(csMfg.toLowerCase().slice(0, 5))
         ? `${csMfg} ${csModel}`
         : csModel
       : csMfg;
+    const modelInfo = reportModelInfo || snap?.computerModel || "";
 
     const os = ev.find((e) => e.id.startsWith("Win32_OperatingSystem"));
     const osCaption = os?.fields.Caption?.trim() ?? "";
     const osArch = os?.fields.OSArchitecture?.trim() ?? "";
-    const osInfo = osCaption
+    const reportOsInfo = osCaption
       ? `${osCaption.replace(/^Microsoft\s+/i, "")}${osArch ? ` ${osArch}` : ""}`
       : "";
+    const osInfo = reportOsInfo || snap?.operatingSystem || "";
+
+    const snapText = (id: HardwareInfo["groups"][number]["id"]) => {
+      const group = snap?.groups.find((g) => g.id === id);
+      if (!group || group.items.length === 0) return "";
+      return group.items
+        .map((item) => {
+          const detail = item.details.filter(Boolean).slice(0, 2).join(" / ");
+          return detail ? `${item.name}（${detail}）` : item.name;
+        })
+        .join("\n");
+    };
 
     const rows: Array<{ label: string; value: string }> = [];
 
@@ -404,8 +660,9 @@ export function DiagnosePage({
           : name;
       })
       .filter(Boolean);
-    if (cpus.length > 0) {
-      rows.push({ label: "处理器", value: cpus.join(" / ") });
+    const cpuValue = cpus.length > 0 ? cpus.join(" / ") : snapText("cpu");
+    if (cpuValue) {
+      rows.push({ label: "处理器", value: cpuValue });
     }
 
     const boards = ev
@@ -417,8 +674,10 @@ export function DiagnosePage({
         return mfg && prod ? `${mfg} ${prod}` : mfg || prod;
       })
       .filter(Boolean);
-    if (boards.length > 0) {
-      rows.push({ label: "主板", value: boards.join(" / ") });
+    const boardValue =
+      boards.length > 0 ? boards.join(" / ") : snapText("baseboard");
+    if (boardValue) {
+      rows.push({ label: "主板", value: boardValue });
     }
 
     const mems = ev.filter((e) => e.kind === "setup.memory");
@@ -453,6 +712,9 @@ export function DiagnosePage({
         label: "内存",
         value: `${[mfgStr, totalGb, typeStr, spdStr].filter(Boolean).join(" ")}${sticksStr}`,
       });
+    } else {
+      const memSnap = snapText("memory");
+      if (memSnap) rows.push({ label: "内存", value: memSnap });
     }
 
     const gpus = ev
@@ -472,11 +734,13 @@ export function DiagnosePage({
         return extra ? `${name}（${extra}）` : name;
       })
       .filter(Boolean);
-    if (gpus.length > 0) {
-      rows.push({ label: "显卡", value: gpus.join("\n") });
+    const gpuValue = gpus.length > 0 ? gpus.join("\n") : snapText("graphics");
+    if (gpuValue) {
+      rows.push({ label: "显卡", value: gpuValue });
     }
 
     const disp = ev.find((e) => e.kind === "setup.display_path");
+    const monSnap = snapText("monitors");
     if (disp) {
       const role =
         disp.fields.adapterRole === "discrete"
@@ -491,6 +755,8 @@ export function DiagnosePage({
         label: "显示器",
         value: `${role}${w && h ? ` · ${w}×${h}` : ""}${hz ? ` @ ${hz}Hz` : ""}`,
       });
+    } else if (monSnap) {
+      rows.push({ label: "显示器", value: monSnap });
     }
 
     const diskDrives = ev
@@ -506,8 +772,11 @@ export function DiagnosePage({
         return gb ? `${model} (${gb})` : model;
       })
       .filter(Boolean);
+    const storageSnap = snapText("storage");
     if (diskDrives.length > 0) {
       rows.push({ label: "磁盘", value: diskDrives.join("\n") });
+    } else if (storageSnap) {
+      rows.push({ label: "磁盘", value: storageSnap });
     } else {
       const disk = ev.find((e) => e.kind === "setup.disk_capacity");
       if (disk) {
@@ -532,8 +801,9 @@ export function DiagnosePage({
           .filter(Boolean),
       ),
     );
-    if (sounds.length > 0) {
-      rows.push({ label: "声卡", value: sounds.join("\n") });
+    const soundValue = sounds.length > 0 ? sounds.join("\n") : snapText("audio");
+    if (soundValue) {
+      rows.push({ label: "声卡", value: soundValue });
     }
 
     const nics = Array.from(
@@ -548,105 +818,53 @@ export function DiagnosePage({
           .filter(Boolean),
       ),
     );
-    if (nics.length > 0) {
-      rows.push({ label: "网卡", value: nics.join("\n") });
+    const nicValue = nics.length > 0 ? nics.join("\n") : snapText("network");
+    if (nicValue) {
+      rows.push({ label: "网卡", value: nicValue });
     }
 
     return { modelInfo, osInfo, rows };
-  }, [activeCase?.report?.evidence]);
+  }, [activeCase?.report?.evidence, hardwareSnapshot]);
 
-  function buildDirectAnswer(questionText = ""): string {
-    const q = questionText.toLowerCase();
-    const parts: string[] = [];
-    const findRow = (label: string) =>
-      hardwareOverview.rows.find((r) => r.label === label)?.value;
+  const dedupedAuditChecks = useMemo(
+    () => dedupeAuditChecks(activeCase?.report?.auditChecks ?? []),
+    [activeCase?.report?.auditChecks],
+  );
 
-    const cpuVal = findRow("处理器");
-    const gpuVal = findRow("显卡");
-    const memVal = findRow("内存");
-    const boardVal = findRow("主板");
-    const dispVal = findRow("显示器");
-    const diskVal = findRow("磁盘");
-
-    if (q.includes("cpu") || q.includes("处理器")) {
-      parts.push(
-        cpuVal
-          ? `你的处理器（CPU）实测为：${cpuVal}。`
-          : "本轮暂未读取到处理器型号，可在左侧「硬件信息」查看，或运行「一键体检」。",
-      );
-    } else if (
-      q.includes("gpu") ||
-      q.includes("显卡") ||
-      q.includes("独显") ||
-      q.includes("核显")
-    ) {
-      parts.push(
-        gpuVal ? `你的显卡设备实测为：\n${gpuVal}` : "本轮暂未读取到显卡型号。",
-      );
-    } else if (
-      q.includes("内存") ||
-      q.includes("ram") ||
-      q.includes("xmp") ||
-      q.includes("频率")
-    ) {
-      parts.push(
-        memVal ? `你的内存配置实测为：${memVal}。` : "本轮暂未读取到内存信息。",
-      );
-    } else if (q.includes("主板")) {
-      parts.push(
-        boardVal ? `你的主板型号为：${boardVal}。` : "本轮暂未读取到主板信息。",
-      );
-    } else if (
-      q.includes("显示器") ||
-      q.includes("刷新率") ||
-      q.includes("hz") ||
-      q.includes("分辨率")
-    ) {
-      parts.push(
-        dispVal
-          ? `当前显示器与输出通路：${dispVal}。`
-          : "本轮暂未读取到显示器信息。",
-      );
-    } else if (
-      q.includes("硬盘") ||
-      q.includes("磁盘") ||
-      q.includes("固态") ||
-      q.includes("ssd")
-    ) {
-      parts.push(
-        diskVal
-          ? `你的磁盘设备实测为：\n${diskVal}`
-          : "本轮暂未读取到磁盘信息。",
-      );
+  function buildDirectAnswer(): string {
+    if (displayedExplanation?.origin === "model") {
+      return displayedExplanation.summary;
     }
 
-    if (displayedExplanation) {
-      const originTag =
-        displayedExplanation.origin === "model"
-          ? "【DeepSeek 智能体解读】"
-          : "【智能诊断解读】";
-      parts.push(`${originTag}\n${displayedExplanation.summary}`);
-      if (displayedExplanation.exclusions.length > 0) {
-        parts.push(`可暂排除项：${displayedExplanation.exclusions.join("；")}`);
-      }
-    } else if (explainBusy) {
-      parts.push(
-        "DeepSeek 智能体正在结合以上实测证据流式生成深度解读，请稍候…",
+    if (dedupedAuditChecks.length > 0) {
+      const opportunities = dedupedAuditChecks.filter(
+        (c) => c.assessment === "opportunity",
       );
-    } else if (parts.length === 0 && activeCase?.report) {
-      const obs = activeCase.report.findings
+      if (opportunities.length > 0) {
+        const names = opportunities
+          .map((c) => AUDIT_METRIC_LABELS[c.metric] ?? c.metric)
+          .join("、");
+        return `本机体检已完成：发现 ${opportunities.length} 项可优化设置（${names}），已在下方列出，可直接点击对应按钮打开 Windows 设置调整。`;
+      }
+      return "本机体检已完成：显卡输出、高刷新率、内存频率与系统盘空间等核心项目均状态正常，未发现明显异常。下方为各项体检详情，右侧提供常用系统设置快捷入口。";
+    }
+
+    if (activeCase?.report?.findings.length) {
+      return activeCase.report.findings
         .slice(0, 3)
-        .map((f) => `• ${f.title}：${f.observation}`);
-      if (obs.length > 0) {
-        parts.push(`本轮诊断关键观察：\n${obs.join("\n")}`);
-      } else {
-        parts.push(
-          "本轮检测已完成。可在本对话继续提问；完整配置请查看「硬件信息」，设置入口在右侧。",
-        );
-      }
+        .map((f) => `• ${f.title}：${f.observation}`)
+        .join("\n");
     }
 
-    return parts.join("\n\n");
+    if (explainBusy) {
+      return "正在结合本轮检测结果生成诊断结论，请稍候…";
+    }
+
+    if (activeCase?.report) {
+      return "本轮检测已完成，可在右侧查看本机配置概览与常用设置入口，也可继续向我提问。";
+    }
+
+    return "";
   }
 
   const turns = useMemo<ChatTurn[]>(() => {
@@ -669,7 +887,7 @@ export function DiagnosePage({
     }
 
     const list: ChatTurn[] = [];
-    if (!interviewStarted) return list;
+    if (!interviewStarted) return chatFollowups;
 
     list.push({
       id: "turn-init-user",
@@ -701,8 +919,8 @@ export function DiagnosePage({
         role: "assistant",
         text:
           category === "setup_audit"
-            ? "正在为你执行本机只读硬件扫描与 DeepSeek 智能体分析，请稍候…"
-            : "关键上下文已收集，正在执行只读检查计划并调用智能体分析…",
+            ? "正在执行本机只读体检，请稍候…"
+            : "关键上下文已收集，正在执行只读检查计划…",
         stream: true,
       });
     }
@@ -732,9 +950,9 @@ export function DiagnosePage({
     answers,
     category,
     chatFollowups,
+    dedupedAuditChecks,
     displayedExplanation,
     explainBusy,
-    hardwareOverview,
     initialSymptom,
     interviewCompleted,
     interviewStarted,
@@ -742,7 +960,7 @@ export function DiagnosePage({
   ]);
 
   function startNewDiagnosis(text: string, presetCategory?: SymptomCategory) {
-    if (inFlight.current) return;
+    if (inFlight.current || answerPending.current) return;
     pendingCase.current = null;
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -766,7 +984,7 @@ export function DiagnosePage({
   }
 
   function startQuickAudit() {
-    if (inFlight.current) return;
+    if (inFlight.current || answerPending.current) return;
     pendingCase.current = null;
     onResetCase();
     setCategory("setup_audit");
@@ -807,39 +1025,80 @@ export function DiagnosePage({
     }
   }
 
-  function handleComposerSubmit(value: string) {
+  async function handleComposerSubmit(value: string) {
     const trimmed = value.trim();
-    if (!trimmed) return;
-    if (!interviewStarted && !activeCase) {
-      startNewDiagnosis(trimmed);
+    if (!trimmed || answerPending.current || chatLoading || inFlight.current)
+      return;
+    if (Array.from(trimmed).length > 4000) {
+      setErrorMsg("消息最多 4000 字。");
       return;
     }
     if (currentQuestion) {
       submitFollowupAnswer(trimmed);
       return;
     }
-    if (activeCase?.report) {
+    if (effectiveCapabilities?.modelConfigured && modelReminder.needsReminder()) {
+      setPendingConsent(trimmed);
       setComposerText("");
-      const reply =
-        buildDirectAnswer(trimmed) ||
-        "已根据本轮证据整理结果，可在左侧「硬件信息」查看完整配置。";
-      setChatFollowups((prev) => [
-        ...prev,
-        {
-          id: `fu-u-${Date.now()}`,
-          role: "user",
-          text: trimmed,
-        },
-        {
-          id: `fu-a-${Date.now()}`,
-          role: "assistant",
-          text: reply,
-          stream: true,
-        },
-      ]);
       return;
     }
-    startNewDiagnosis(trimmed);
+    await sendChatMessage(trimmed);
+  }
+
+  async function sendChatMessage(message: string) {
+    if (answerPending.current) return;
+    answerPending.current = true;
+    setAnswerBusy(true);
+    onBusyChange?.(true);
+    setComposerText("");
+    setErrorMsg("");
+    const generation = ++answerGeneration.current;
+    streamedChatRef.current = null;
+    const waitingId = `waiting-${generation}`;
+    setChatFollowups((previous) => [
+      ...previous,
+      { id: waitingId + "-user", role: "user", text: message },
+      {
+        id: waitingId,
+        role: "assistant",
+        text: "正在准备本机上下文并等待 AI 回复…",
+        stream: true,
+      },
+    ]);
+    try {
+      const hardware =
+        diagnostics.cachedHardware() ??
+        (await diagnostics.hardware().catch(() => undefined));
+      if (effectiveCapabilities?.modelConfigured) modelReminder.recordSend();
+      const result = await diagnostics.sendChat({
+        conversationId: chatId,
+        caseId: activeCase?.id ?? null,
+        message,
+        hardware: hardware?.origin === "windows_native" ? hardware : null,
+        allowModel: true,
+      });
+      if (generation === answerGeneration.current)
+        setChatFollowups(
+          mapChat(result.messages, streamedChatRef.current !== chatId),
+        );
+      await onChatsChanged();
+    } catch (error) {
+      if (generation === answerGeneration.current) {
+        setChatFollowups((previous) =>
+          previous.filter(
+            (t) => t.id !== waitingId && t.id !== waitingId + "-user",
+          ),
+        );
+        setComposerText(message);
+        setErrorMsg(String(error));
+      }
+    } finally {
+      if (generation === answerGeneration.current) {
+        answerPending.current = false;
+        setAnswerBusy(false);
+      }
+      onBusyChange?.(false);
+    }
   }
 
   async function handleApproveAndRunPackage(
@@ -873,7 +1132,7 @@ export function DiagnosePage({
         effectiveAnswers,
       );
       const useSetupAudit = effectiveCategory === "setup_audit";
-      const useNativeV2 = Boolean(capabilities?.realCollectionEnabled);
+      const useNativeV2 = Boolean(effectiveCapabilities?.realCollectionEnabled);
       const nativeCategory =
         effectiveCategory === "setup_audit"
           ? "gaming_display"
@@ -955,32 +1214,6 @@ export function DiagnosePage({
       }
       await onCaseUpdated(result);
       setPanelTab("summary");
-      const latestRuns = (
-        result.diagnostic as
-          | { runs?: Array<{ explanation?: Explanation | null }> }
-          | null
-          | undefined
-      )?.runs;
-      const latestExp = latestRuns?.[latestRuns.length - 1]?.explanation;
-      if (
-        result.report &&
-        result.diagnostic &&
-        capabilities?.modelConfigured &&
-        (!latestExp || latestExp.origin !== "model")
-      ) {
-        setExplainBusy(true);
-        void diagnostics
-          .explainReport({ caseId: result.id, allowModel: true })
-          .then(async (exp) => {
-            setAiExplanation(exp);
-            const refreshed = await diagnostics.get(result.id);
-            await onCaseUpdated(refreshed);
-          })
-          .catch(() => {
-            // 若远程模型调用失败，保留本地规则结论
-          })
-          .finally(() => setExplainBusy(false));
-      }
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "执行检查计划时发生错误。");
     } finally {
@@ -1031,20 +1264,24 @@ export function DiagnosePage({
     setRetestVariable("");
   }
 
-  async function handleExplainWithAi() {
-    if (!activeCase?.report || explainBusy) return;
+  async function handleExplainWithAi(
+    targetCase: CaseRecord | null = activeCase,
+  ) {
+    if (!targetCase || explainBusy) return;
     setExplainBusy(true);
     setErrorMsg("");
     try {
       const exp = await diagnostics.explainReport({
-        caseId: activeCase.id,
-        allowModel: Boolean(capabilities?.modelConfigured),
+        caseId: targetCase.id,
+        allowModel: true,
       });
       setAiExplanation(exp);
-      const refreshed = await diagnostics.get(activeCase.id);
+      const refreshed = await diagnostics.get(targetCase.id);
       await onCaseUpdated(refreshed);
-    } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : "AI 报告解读失败。");
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error ? err.message : "生成诊断解读失败，请重试。",
+      );
     } finally {
       setExplainBusy(false);
     }
@@ -1062,44 +1299,35 @@ export function DiagnosePage({
     }
   }
 
-  const autoExplainedCaseIdRef = useRef<string | null>(null);
   useEffect(() => {
     setAiExplanation(null);
     setAgentActionFeedback("");
+  }, [activeCase?.id]);
+
+  useEffect(() => {
     if (
       activeCase?.id &&
       activeCase.report &&
       activeCase.diagnostic &&
-      capabilities?.modelConfigured &&
-      (!savedExplanation || savedExplanation.origin !== "model") &&
-      autoExplainedCaseIdRef.current !== activeCase.id
+      activeCase.status !== "cancelled" &&
+      activeCase.status !== "failed" &&
+      !savedExplanation &&
+      !aiExplanation &&
+      !explainBusy &&
+      autoExplainedCaseRef.current !== activeCase.id
     ) {
-      autoExplainedCaseIdRef.current = activeCase.id;
-      setExplainBusy(true);
-      void diagnostics
-        .explainReport({ caseId: activeCase.id, allowModel: true })
-        .then(async (exp) => {
-          setAiExplanation(exp);
-          const refreshed = await diagnostics.get(activeCase.id);
-          await onCaseUpdated(refreshed);
-        })
-        .catch(() => {
-          // 保持原有本地结论
-        })
-        .finally(() => setExplainBusy(false));
+      autoExplainedCaseRef.current = activeCase.id;
+      void handleExplainWithAi(activeCase);
     }
-  }, [
-    activeCase?.id,
-    activeCase?.report,
-    activeCase?.diagnostic,
-    capabilities?.modelConfigured,
-    savedExplanation,
-    onCaseUpdated,
-  ]);
+  }, [activeCase, savedExplanation, aiExplanation, explainBusy]);
 
   function handleResetAll() {
-    if (inFlight.current) return;
+    if (inFlight.current || answerPending.current) return;
+    answerGeneration.current++;
+    answerPending.current = false;
+    setAnswerBusy(false);
     pendingCase.current = null;
+    autoExplainedCaseRef.current = null;
     onNewSession?.();
     setInterviewStarted(false);
     setInitialSymptom("");
@@ -1118,32 +1346,101 @@ export function DiagnosePage({
   useEffect(() => {
     if (
       autoStartAudit &&
-      capabilities &&
+      effectiveCapabilities &&
       !activeCase &&
       !initialAuditStarted.current
     ) {
       initialAuditStarted.current = true;
       startQuickAudit();
     }
-  }, [autoStartAudit, capabilities, activeCase]);
+  }, [autoStartAudit, effectiveCapabilities, activeCase]);
 
-  const showSplitWorkspace = interviewStarted || Boolean(activeCase);
+  const showSplitWorkspace =
+    interviewStarted || Boolean(activeCase) || chatFollowups.length > 0;
   const guidedSteps = useMemo(
-    () => getPrioritizedNextSteps(category),
-    [category],
+    () =>
+      activeCase?.report?.findings.length
+        ? activeCase.report.findings.slice(0, 8).map((f, index) => ({
+            priority: index + 1,
+            title: f.title,
+            purpose: f.observation,
+            action: f.nextStep,
+            expected:
+              "记录是否复现、时间和新提示；一次只改变一个变量，不预先保证性能收益。",
+          }))
+        : [
+            {
+              priority: 1,
+              title: "先补充缺少的证据",
+              purpose: "没有发现不等于已排除全部问题。",
+              action:
+                "查看左侧待补证项目，按实际问题选择对应工具或记录复现时间；不要为了凑证据直接修改 BIOS 或进行烤机。",
+              expected: "得到可追溯、可比较的记录，再决定下一步。",
+            },
+          ],
+    [activeCase?.report],
   );
 
+  const consentDialog = (
+    <Dialog
+      isOpen={pendingConsent !== null}
+      onOpenChange={(open) => {
+        if (!open) {
+          if (pendingConsent) setComposerText(pendingConsent);
+          setPendingConsent(null);
+        }
+      }}
+      purpose="form"
+    >
+      <DialogHeader
+        title="AI 使用提醒"
+        subtitle="已累计发送 10 次 AI 提问。继续使用会联网，并由所配置的服务计费；之后每 10 次再提醒一次。"
+      />
+      <VStack gap={3}>
+        <Text weight="semibold">
+          {effectiveCapabilities?.modelName} ·{" "}
+          {effectiveCapabilities?.modelTarget}
+        </Text>
+        <Text>
+          发送范围：你主动输入的消息、最近最多 6
+          轮成功对话、脱敏后的硬件缓存、最近一次本机体检事实，以及当前案例的问题描述及体检摘要。不会上传原始附件。对话原文保存在本机。
+        </Text>
+        <Text style={preLineTextStyle}>{pendingConsent}</Text>
+        <HStack gap={2} hAlign="end">
+          <Button
+            label="暂不发送"
+            variant="secondary"
+            onClick={() => {
+              if (pendingConsent) setComposerText(pendingConsent);
+              setPendingConsent(null);
+            }}
+          />
+          <Button
+            label="继续发送"
+            variant="primary"
+            onClick={() => {
+              const message = pendingConsent;
+              modelReminder.acknowledge();
+              setPendingConsent(null);
+              if (message) void sendChatMessage(message);
+            }}
+          />
+        </HStack>
+      </VStack>
+    </Dialog>
+  );
   return !showSplitWorkspace ? (
     <Layout
       height="fill"
       contentWidth={960}
       content={
         <LayoutContent padding={6}>
+          {consentDialog}
           <VStack gap={3} hAlign="center">
             <Icon icon={ShieldCheckIcon} size="lg" />
-            <Heading level={1}>电脑出了什么问题？</Heading>
+            <Heading level={1}>智能硬件与系统诊断</Heading>
             <Text color="secondary" justify="center">
-              请在下方描述具体异常现象，或直接选择预设诊断场景。
+              输入电脑故障现象、查询本机硬件配置，或选择下方高频诊断场景
             </Text>
           </VStack>
         </LayoutContent>
@@ -1159,7 +1456,8 @@ export function DiagnosePage({
             <VoiceComposer
               density="compact"
               style={homeComposerStyle}
-              isDisabled={busy || !isVisible}
+              inputStyle={centeredInputStyle}
+              isDisabled={busy || answerBusy || chatLoading || !isVisible}
               placeholder="描述你的电脑现象，例如显示输出异常、系统崩溃重启、磁盘告警或硬件核查"
               value={composerText}
               onChange={setComposerText}
@@ -1203,6 +1501,7 @@ export function DiagnosePage({
           >
             {/* 左栏：持续追问对话流 + 套餐授权 */}
             <VStack style={chatColumnStyle}>
+              {consentDialog}
               <VStack
                 role="region"
                 aria-label="诊断会话"
@@ -1223,10 +1522,12 @@ export function DiagnosePage({
                     <Heading level={4}>
                       {activeCase
                         ? activeCase.title
-                        : category === "setup_audit"
-                          ? SETUP_AUDIT_PRESET.label
-                          : (CATEGORY_PRESETS.find((c) => c.id === category)
-                              ?.label ?? "智能问诊")}
+                        : !interviewStarted && chatFollowups.length > 0
+                          ? "AI 问答"
+                          : category === "setup_audit"
+                            ? SETUP_AUDIT_PRESET.label
+                            : (CATEGORY_PRESETS.find((c) => c.id === category)
+                                ?.label ?? "智能问诊")}
                     </Heading>
                   </StackItem>
                 </HStack>
@@ -1245,9 +1546,11 @@ export function DiagnosePage({
                     <Text size="sm" weight="semibold">
                       {activeCase?.report
                         ? "已完成分析"
-                        : interviewCompleted
-                          ? "待单次授权"
-                          : `追问 ${Math.min(answers.length + 1, questions.length)}/${questions.length}`}
+                        : !interviewStarted && chatFollowups.length > 0
+                          ? "自由对话"
+                          : interviewCompleted
+                            ? "待单次授权"
+                            : `追问 ${Math.min(answers.length + 1, questions.length)}/${questions.length}`}
                     </Text>
                   </HStack>
                   <HStack gap={2} wrap="wrap" vAlign="center">
@@ -1307,12 +1610,12 @@ export function DiagnosePage({
                     placeholder={
                       currentQuestion
                         ? "在此回答当前问题，或补充说明…"
-                        : "输入新问题即可随时开启新一轮问答…"
+                        : "继续提问，可结合本机配置和当前体检结果…"
                     }
                     value={composerText}
                     onChange={setComposerText}
                     onSubmit={handleComposerSubmit}
-                    isDisabled={busy || !isVisible}
+                    isDisabled={busy || answerBusy || chatLoading || !isVisible}
                   />
                 }
               >
@@ -1330,16 +1633,46 @@ export function DiagnosePage({
                             ? "100%"
                             : undefined
                         }
-                        variant={turn.role === "user" ? "filled" : "ghost"}
+                        variant={
+                          turn.role === "user" ||
+                          turn.id.startsWith("hardware-answer-")
+                            ? "filled"
+                            : "ghost"
+                        }
+                        style={
+                          turn.id.startsWith("hardware-answer-")
+                            ? {
+                                backgroundColor: "var(--color-background-body)",
+                              }
+                            : undefined
+                        }
                       >
-                        <VStack gap={4}>
+                        <VStack gap={3}>
+                          {turn.origin && turn.role === "assistant" ? (
+                            <Text
+                              size="sm"
+                              weight="semibold"
+                              color={
+                                turn.origin === "model"
+                                  ? "primary"
+                                  : "secondary"
+                              }
+                            >
+                              {turn.origin === "model"
+                                ? `AI · ${effectiveCapabilities?.modelName ?? "已配置模型"}`
+                                : turn.origin === "browser_preview"
+                                  ? "浏览器预览 · 未调用 AI"
+                                  : "AI 未能回答"}
+                            </Text>
+                          ) : null}
                           <StreamingText
                             text={turn.text}
                             stream={turn.stream}
                           />
                           {(turn.id === "turn-executed" ||
                             turn.id === "loaded-case-assistant") &&
-                          activeCase?.report?.auditChecks?.length ? (
+                          activeCase &&
+                          dedupedAuditChecks.length > 0 ? (
                             <VStack
                               gap={2}
                               padding={4}
@@ -1350,9 +1683,9 @@ export function DiagnosePage({
                             >
                               <Heading level={5}>
                                 基础设置与性能释放体检（
-                                {activeCase.report.auditChecks.length} 项）
+                                {dedupedAuditChecks.length} 项）
                               </Heading>
-                              {activeCase.report.auditChecks.map((chk) => {
+                              {dedupedAuditChecks.map((chk) => {
                                 const badge =
                                   chk.assessment === "opportunity"
                                     ? {
@@ -1371,13 +1704,15 @@ export function DiagnosePage({
                                           }
                                         : {
                                             dot: "neutral" as const,
-                                            label: "无法确认",
+                                            label: "系统默认",
                                           };
                                 const actionMeta =
-                                  AUDIT_ACTION_META[chk.metric];
+                                  chk.assessment === "opportunity"
+                                    ? AUDIT_ACTION_META[chk.metric]
+                                    : undefined;
                                 return (
                                   <VStack
-                                    key={`${activeCase.id}-${chk.checkId}-${chk.objectId ?? "global"}`}
+                                    key={`${activeCase.id}-${chk.checkId}-${chk.metric}-${chk.objectId ?? "global"}`}
                                     paddingBlock={3}
                                     gap={2}
                                   >
@@ -1408,7 +1743,20 @@ export function DiagnosePage({
                                         <HStack
                                           gap={2}
                                           vAlign="center"
-                                          style={{ flexShrink: 0 }}
+                                          paddingInline={2}
+                                          paddingBlock={1}
+                                          style={{
+                                            flexShrink: 0,
+                                            backgroundColor:
+                                              "var(--color-background-body)",
+                                            borderRadius:
+                                              "var(--radius-container)",
+                                            border: "var(--border-width) solid",
+                                            borderColor:
+                                              badge.dot === "success"
+                                                ? "var(--color-border-success)"
+                                                : "var(--color-border)",
+                                          }}
                                         >
                                           <StatusDot
                                             variant={badge.dot}
@@ -1416,6 +1764,12 @@ export function DiagnosePage({
                                             style={{
                                               width: "var(--spacing-3)",
                                               height: "var(--spacing-3)",
+                                              ...(badge.dot === "success"
+                                                ? {
+                                                    backgroundColor:
+                                                      "var(--color-icon-success)",
+                                                  }
+                                                : {}),
                                             }}
                                           />
                                           <Text
@@ -1435,7 +1789,7 @@ export function DiagnosePage({
                                         </HStack>
                                       </HStack>
                                       <StreamingText
-                                        text={chk.summary}
+                                        text={formatFriendlyCheckSummary(chk)}
                                         stream={turn.stream}
                                         emphasis
                                       />
@@ -1542,7 +1896,7 @@ export function DiagnosePage({
                         <Divider />
                         <VStack gap={1.5}>
                           {category === "setup_audit" &&
-                          capabilities?.setupAuditEnabled ? (
+                          effectiveCapabilities?.setupAuditEnabled ? (
                             <>
                               <Text size="sm">
                                 • 检查
@@ -1568,7 +1922,7 @@ export function DiagnosePage({
                                 链路与热/功耗传感器（当前只读套餐暂不支持直接读取，将如实标为尚未支持）
                               </Text>
                             </>
-                          ) : capabilities?.realCollectionEnabled ? (
+                          ) : effectiveCapabilities?.realCollectionEnabled ? (
                             <>
                               <Text size="sm">
                                 • 动作
@@ -1623,13 +1977,15 @@ export function DiagnosePage({
               </ChatLayout>
             </VStack>
 
-            <ResizeHandle
-              resizable={resizable}
-              isReversed
-              hasDivider
-              isAlwaysVisible
-              label="调整对话与证据面板宽度"
-            />
+            {activeCase || interviewStarted ? (
+              <ResizeHandle
+                resizable={resizable}
+                isReversed
+                hasDivider
+                isAlwaysVisible
+                label="调整对话与证据面板宽度"
+              />
+            ) : null}
 
             {/* 右栏：可调宽的常驻诊断与进度面板 */}
             <VStack
@@ -1637,7 +1993,12 @@ export function DiagnosePage({
               height="100%"
               padding={4}
               gap={4}
-              style={panelScrollStyle}
+              style={{
+                ...panelScrollStyle,
+                ...(!activeCase && !interviewStarted
+                  ? { display: "none" }
+                  : {}),
+              }}
             >
               <HStack hAlign="between" vAlign="center" width="100%">
                 <Heading level={4}>诊断进度与证据面板</Heading>
@@ -1672,12 +2033,14 @@ export function DiagnosePage({
                 <Card variant="muted" padding={5}>
                   <VStack gap={2}>
                     <Text weight="semibold" size="sm">
-                      等待完成左侧问诊与授权
+                      {!activeCase && chatFollowups.length > 0
+                        ? "AI 问答"
+                        : "等待完成左侧问诊与授权"}
                     </Text>
                     <Text size="sm" color="secondary">
-                      完成左侧 3
-                      个简短追问并点击“同意套餐计划”后，这里会立刻呈现：
-                      观察结论、排好优先级的下一步操作指南、覆盖度明细以及可展开的原始证据。
+                      {!activeCase && chatFollowups.length > 0
+                        ? "回答引用本机硬件快照。完整设备列表可在「硬件信息」查看；需要检查设置或故障时，可使用「一键体检」。"
+                        : "完成左侧简短追问并确认检查后，这里会呈现观察结论、下一步排查指南和原始证据。"}
                     </Text>
                   </VStack>
                 </Card>
@@ -1728,6 +2091,57 @@ export function DiagnosePage({
                         </HStack>
                       ) : null}
 
+                      {hardwareOverview.rows.length > 0 ? (
+                        <Card variant="default" padding={4}>
+                          <VStack gap={2}>
+                            <HStack
+                              hAlign="between"
+                              vAlign="center"
+                              width="100%"
+                            >
+                              <Heading level={5}>本机配置概览</Heading>
+                              <Token
+                                size="sm"
+                                color="blue"
+                                label="本机实测配置"
+                              />
+                            </HStack>
+                            <Divider />
+                            <VStack gap={2} width="100%">
+                              {hardwareOverview.rows.map((row) => (
+                                <HStack
+                                  key={row.label}
+                                  gap={3}
+                                  vAlign="start"
+                                  width="100%"
+                                >
+                                  <StackItem
+                                    size="static"
+                                    style={detailLabelStyle}
+                                  >
+                                    <Text
+                                      size="sm"
+                                      color="secondary"
+                                      weight="medium"
+                                    >
+                                      {row.label}
+                                    </Text>
+                                  </StackItem>
+                                  <StackItem
+                                    size="fill"
+                                    style={minWidthZeroStyle}
+                                  >
+                                    <Text size="sm" style={preLineTextStyle}>
+                                      {row.value}
+                                    </Text>
+                                  </StackItem>
+                                </HStack>
+                              ))}
+                            </VStack>
+                          </VStack>
+                        </Card>
+                      ) : null}
+
                       {activeCase.diagnostic ? (
                         <Card variant="default" padding={4}>
                           <VStack gap={3}>
@@ -1751,8 +2165,8 @@ export function DiagnosePage({
                                     }
                                     label={
                                       displayedExplanation.origin === "model"
-                                        ? "DeepSeek 智能体已介入"
-                                        : "本地规则模板"
+                                        ? "AI 智能体已介入"
+                                        : "智能体检总结"
                                     }
                                   />
                                 ) : null}
@@ -1762,9 +2176,9 @@ export function DiagnosePage({
                                       ? "AI 解读中…"
                                       : displayedExplanation
                                         ? "重新生成解读"
-                                        : capabilities?.modelConfigured
+                                        : effectiveCapabilities?.modelConfigured
                                           ? "让 AI 深度解读"
-                                          : "生成规则解读"
+                                          : "生成体检总结"
                                   }
                                   size="sm"
                                   variant="secondary"
@@ -1773,16 +2187,34 @@ export function DiagnosePage({
                                 />
                               </HStack>
                             </HStack>
-                            {displayedExplanation ? (
+                            {displayedExplanation?.origin === "model" ? (
                               <VStack gap={2}>
-                                <Text size="sm">
-                                  {displayedExplanation.summary}
-                                </Text>
-                                {displayedExplanation.fallbackReason ? (
-                                  <Text type="supporting" color="secondary">
-                                    回退原因：
-                                    {displayedExplanation.fallbackReason}
-                                  </Text>
+                                <StreamingText
+                                  text={displayedExplanation.summary}
+                                  stream={Boolean(aiExplanation)}
+                                />
+                                {displayedExplanation.recommendations.length >
+                                0 ? (
+                                  <VStack gap={1}>
+                                    <Text
+                                      type="supporting"
+                                      weight="semibold"
+                                      color="secondary"
+                                    >
+                                      建议操作顺序：
+                                    </Text>
+                                    {displayedExplanation.recommendations
+                                      .slice(0, 3)
+                                      .map((rec) => (
+                                        <Text
+                                          key={rec.priority}
+                                          size="sm"
+                                          style={preLineTextStyle}
+                                        >
+                                          {rec.priority}. {rec.instruction}
+                                        </Text>
+                                      ))}
+                                  </VStack>
                                 ) : null}
                                 {displayedExplanation.exclusions.length > 0 ? (
                                   <VStack gap={1}>
@@ -1803,11 +2235,28 @@ export function DiagnosePage({
                                   </VStack>
                                 ) : null}
                               </VStack>
-                            ) : (
+                            ) : explainBusy ? (
                               <Text size="sm" color="secondary">
-                                {capabilities?.modelConfigured
-                                  ? "点击右上角按钮，让配置好的大模型结合本轮证据用通俗人话总结问题与操作顺序。"
-                                  : "当前未配置远程模型 Key，可在「设置与关于」填入 DeepSeek API Key 开启 AI 深度解读。"}
+                                正在结合本轮检测结果生成解读，请稍候…
+                              </Text>
+                            ) : (
+                              <Text size="sm">
+                                {(() => {
+                                  const opps = dedupedAuditChecks.filter(
+                                    (c) => c.assessment === "opportunity",
+                                  );
+                                  if (opps.length > 0) {
+                                    const names = opps
+                                      .map(
+                                        (c) =>
+                                          AUDIT_METRIC_LABELS[c.metric] ??
+                                          c.metric,
+                                      )
+                                      .join("、");
+                                    return `本轮共发现 ${opps.length} 项可优化设置（${names}）。点击下方对应的「直达设置」按钮，即可直接跳转到 Windows 设置页面自行开关调整，安全无损。`;
+                                  }
+                                  return "核心硬件与基础设置检查未见明显异常。如果日常使用流畅，无需修改 BIOS 或系统底层设置；需要调节电源模式、分辨率或刷新率时，直接使用下方快捷入口即可。";
+                                })()}
                               </Text>
                             )}
                           </VStack>
@@ -1817,20 +2266,16 @@ export function DiagnosePage({
                       <Card variant="default" padding={4}>
                         <VStack gap={3}>
                           <HStack hAlign="between" vAlign="center" width="100%">
-                            <Heading level={5}>
-                              Agent 行动台：小问题一键改良 · 大问题果断甩锅
-                            </Heading>
+                            <Heading level={5}>手动排查与系统设置入口</Heading>
                             <Token
                               size="sm"
                               color="blue"
-                              label="安全无损分流"
+                              label="由你确认操作"
                             />
                           </HStack>
                           <Text size="sm" color="secondary">
-                            软件设置小毛病直接点下方按钮，一键直达对应 Windows
-                            设置界面自己开关或调整（无需复制粘贴）；遇到插错主板口、进
-                            BIOS 开 XMP
-                            或硬件损坏等大问题，免费工具绝不强改底层，直接一键导出报告找售后保修！
+                            下方按钮只打开对应 Windows
+                            设置页，不会替你修改配置。先核对本轮证据与当前用途，每次只改变一项；需要外部工具时，从“工具与来源”补充证据。
                           </Text>
                           {agentActionFeedback ? (
                             <Banner
@@ -1902,7 +2347,7 @@ export function DiagnosePage({
                             <Button
                               size="sm"
                               variant="primary"
-                              label="大问题甩锅：导出报告找售后"
+                              label="导出证据报告"
                               icon={
                                 <Icon icon={DocumentArrowDownIcon} size="sm" />
                               }
@@ -1914,59 +2359,68 @@ export function DiagnosePage({
                         </VStack>
                       </Card>
 
-                      <VStack gap={2}>
-                        <Heading level={5}>
-                          已观察到的事实（{activeCase.report.findings.length}）
-                        </Heading>
-                        {activeCase.report.findings.map((f) => (
-                          <Card key={f.id} variant="default" padding={3}>
-                            <VStack gap={1.5}>
-                              <HStack
-                                hAlign="between"
-                                vAlign="center"
-                                width="100%"
-                              >
-                                <Text weight="semibold" size="sm">
-                                  {f.title}
-                                </Text>
-                                <Token size="sm" label={f.strength} />
-                              </HStack>
-                              <Text size="sm">{f.observation}</Text>
-                              {f.limitations.length > 0 ? (
-                                <Text type="supporting" color="secondary">
-                                  边界限制：{f.limitations.join("；")}
-                                </Text>
-                              ) : null}
-                              <Text type="supporting" weight="medium">
-                                规则建议：{f.nextStep}
-                              </Text>
-                            </VStack>
-                          </Card>
-                        ))}
-                      </VStack>
+                      {activeCase.report.findings.length > 0 ? (
+                        <>
+                          <VStack gap={2}>
+                            <Heading level={5}>
+                              已观察到的事实（
+                              {activeCase.report.findings.length}）
+                            </Heading>
+                            {activeCase.report.findings.map((f) => (
+                              <Card key={f.id} variant="default" padding={3}>
+                                <VStack gap={1.5}>
+                                  <HStack
+                                    hAlign="between"
+                                    vAlign="center"
+                                    width="100%"
+                                  >
+                                    <Text weight="semibold" size="sm">
+                                      {f.title}
+                                    </Text>
+                                    <Token size="sm" label={f.strength} />
+                                  </HStack>
+                                  <Text size="sm">{f.observation}</Text>
+                                  {f.limitations.length > 0 ? (
+                                    <Text type="supporting" color="secondary">
+                                      边界限制：{f.limitations.join("；")}
+                                    </Text>
+                                  ) : null}
+                                  <Text type="supporting" weight="medium">
+                                    规则建议：{f.nextStep}
+                                  </Text>
+                                </VStack>
+                              </Card>
+                            ))}
+                          </VStack>
 
-                      <VStack gap={2}>
-                        <Heading level={5}>
-                          下一步低成本排查指南（按优先级排序）
-                        </Heading>
-                        {guidedSteps.map((step) => (
-                          <Card key={step.priority} variant="muted" padding={4}>
-                            <HStack gap={3} vAlign="start">
-                              <Heading level={3}>{step.priority}</Heading>
-                              <VStack gap={1}>
-                                <Text weight="semibold">{step.title}</Text>
-                                <Text type="supporting" color="secondary">
-                                  目的：{step.purpose}
-                                </Text>
-                                <Text size="sm">操作：{step.action}</Text>
-                                <Text type="supporting" color="secondary">
-                                  预期反馈：{step.expected}
-                                </Text>
-                              </VStack>
-                            </HStack>
-                          </Card>
-                        ))}
-                      </VStack>
+                          <VStack gap={2}>
+                            <Heading level={5}>
+                              下一步低成本排查指南（按优先级排序）
+                            </Heading>
+                            {guidedSteps.map((step) => (
+                              <Card
+                                key={step.priority}
+                                variant="muted"
+                                padding={4}
+                              >
+                                <HStack gap={3} vAlign="start">
+                                  <Heading level={3}>{step.priority}</Heading>
+                                  <VStack gap={1}>
+                                    <Text weight="semibold">{step.title}</Text>
+                                    <Text type="supporting" color="secondary">
+                                      目的：{step.purpose}
+                                    </Text>
+                                    <Text size="sm">操作：{step.action}</Text>
+                                    <Text type="supporting" color="secondary">
+                                      预期反馈：{step.expected}
+                                    </Text>
+                                  </VStack>
+                                </HStack>
+                              </Card>
+                            ))}
+                          </VStack>
+                        </>
+                      ) : null}
                     </VStack>
                   ) : null}
 

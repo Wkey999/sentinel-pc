@@ -62,6 +62,15 @@ fn redact(value: &mut Value, replacements: &mut BTreeMap<String, String>, key: &
                             "volumeRole",
                             "totalBytes",
                             "freeBytes",
+                            "sensorLabel",
+                            "sensorKind",
+                            "unit",
+                            "sampleCount",
+                            "maximum",
+                            "last",
+                            "yesCount",
+                            "firstDeclaredTime",
+                            "lastDeclaredTime",
                         ]
                         .contains(&k.as_str())
                     });

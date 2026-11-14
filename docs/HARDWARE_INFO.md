@@ -12,6 +12,8 @@
 
 浏览器预览只显示明确标注的演示数据；原生读取失败不会静默降级成演示数据。
 
+配置问答共用此硬件快照，不局限于当前体检报告。2026-11-14 后续改造已把普通提问接入真实模型对话，首次许可后向所配置的服务发送脱敏硬件缓存、近期对话及当前案例摘要；聊天只读已有快照和已存体检，不主动重新采集；缺数据不能猜测。原生失败不使用浏览器演示数据代替，也不因聊天创建体检案例。未配置或模型失败明确提示，离线硬件页与规则体检仍可使用。详见 [AI 问答与工具补证](AI_CHAT_AND_TOOLS.md)；早期关键词本地查表不再作为完整 AI 对话的替代。
+
 2026-11-14 验证：96 项 Rust 回归通过；另外显式执行一次 Windows 原生硬件采集，通过前端严格契约校验，合计 27 项前端测试通过。浏览器验证了默认首页、刷新、导航、体检入口和窄窗口排版；浏览器截图中的数据为演示数据。前端构建、正式版 EXE 构建和 Astryx 产物检查通过。机器原始快照与构建指纹保存在被 Git 忽略的 `.cache/`，不纳入公开源码。
 
 参考：[DXCore 属性与专用显存](https://learn.microsoft.com/en-us/windows/win32/api/dxcore_interface/ne-dxcore_interface-dxcoreadapterproperty)、[WMI 显卡属性类型](https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-videocontroller)、[EDID 基础尺寸](https://learn.microsoft.com/en-us/windows/win32/wmicoreprov/wmimonitorbasicdisplayparams)。

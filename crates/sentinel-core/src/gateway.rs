@@ -19,6 +19,18 @@ pub trait ModelProvider: Send + Sync + 'static {
     fn interview(&self, redacted: InterviewRequest) -> crate::Result<Vec<Question>>;
     fn explain(&self, redacted: Report, allowed_actions: Vec<String>)
     -> crate::Result<Explanation>;
+    fn chat(&self, _input: crate::chat::ChatInput) -> crate::Result<String> {
+        Err("此模型适配器尚不支持多轮对话，请选择 Chat Completions。".into())
+    }
+    fn chat_stream(
+        &self,
+        input: crate::chat::ChatInput,
+        on_delta: &mut dyn FnMut(&str),
+    ) -> crate::Result<String> {
+        let text = self.chat(input)?;
+        on_delta(&text);
+        Ok(text)
+    }
 }
 #[derive(Clone, Default)]
 pub struct ModelGateway {
@@ -40,6 +52,79 @@ impl ModelGateway {
     }
     pub fn enabled(&self) -> bool {
         self.provider.is_some()
+    }
+    fn run_chat_with<F>(
+        &self,
+        input: crate::chat::ChatInput,
+        allow_model: bool,
+        invoke_provider: F,
+    ) -> crate::chat::ChatMessage
+    where
+        F: FnOnce(Arc<dyn ModelProvider>, crate::chat::ChatInput) -> crate::Result<String>
+            + Send
+            + 'static,
+    {
+        let unavailable = |text: &str| crate::chat::ChatMessage {
+            role: "assistant".into(),
+            text: text.into(),
+            origin: "unavailable".into(),
+        };
+        let Some(provider) = self.provider.clone() else {
+            return unavailable(
+                "尚未配置 AI 模型。请在「设置与关于」填写兼容 Chat Completions 的服务地址、模型和 Key；当前本地体检仍可使用。",
+            );
+        };
+        if !allow_model {
+            return unavailable(
+                "本轮尚未同意发送给模型，未发起联网请求。你仍可使用本机硬件信息和只读体检。",
+            );
+        }
+        let Ok(slot) = ModelSlot::acquire(self.busy.clone()) else {
+            return unavailable("模型正在处理另一个请求，请稍后重试；本轮未发送。");
+        };
+        let (tx, rx) = std::sync::mpsc::sync_channel(1);
+        std::thread::spawn(move || {
+            let _slot = slot;
+            let _ = tx.send(invoke_provider(provider, input));
+        });
+        match rx.recv_timeout(std::time::Duration::from_secs(45)) {
+            Ok(Ok(text))
+                if !text.trim().is_empty()
+                    && text.chars().count() <= 12000
+                    && !text.contains('\0') =>
+            {
+                crate::chat::ChatMessage {
+                    role: "assistant".into(),
+                    text,
+                    origin: "model".into(),
+                }
+            }
+            Ok(Err(error)) => unavailable(&error),
+            Ok(Ok(_)) => unavailable("模型回复为空或超出长度限制，请重试。"),
+            Err(_) => {
+                unavailable("模型回复超时；未自动重试，也没有用体检摘要代替回答。请稍后再试。")
+            }
+        }
+    }
+    pub fn chat(
+        &self,
+        input: crate::chat::ChatInput,
+        allow_model: bool,
+    ) -> crate::chat::ChatMessage {
+        self.run_chat_with(input, allow_model, |provider, input| provider.chat(input))
+    }
+    pub fn chat_stream<F>(
+        &self,
+        input: crate::chat::ChatInput,
+        allow_model: bool,
+        mut on_delta: F,
+    ) -> crate::chat::ChatMessage
+    where
+        F: FnMut(&str) + Send + 'static,
+    {
+        self.run_chat_with(input, allow_model, move |provider, input| {
+            provider.chat_stream(input, &mut on_delta)
+        })
     }
     pub fn target(&self) -> Option<String> {
         self.provider.as_ref().and_then(|p| p.target())

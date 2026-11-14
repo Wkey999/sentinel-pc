@@ -25,6 +25,8 @@ export const sentinelTheme = defineTheme({
   },
   radius: { base: 4, multiplier: 1.25 },
   tokens: {
+    "--color-text-success": ["#07552F", "#79F2AE"],
+    "--color-icon-success": ["#087A3E", "#79F2AE"],
     // 底色整体偏亮蓝：浅色为淡蓝白，深色为明亮的海军蓝而不是灰黑；
     // surface 与 card 保持高通透度，让底层二次元插画清晰呈现
     "--color-background-body": ["#EAF2FF", "#0C2250"],
@@ -54,14 +56,16 @@ export const sentinelTheme = defineTheme({
     },
     sideNav: {
       base: {
-        backgroundColor: "color-mix(in srgb, var(--color-background-body) 40%, transparent)",
+        backgroundColor:
+          "color-mix(in srgb, var(--color-background-body) 40%, transparent)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
       },
     },
     chatComposer: {
       base: {
-        backgroundColor: "color-mix(in srgb, var(--color-background-card) 88%, transparent)",
+        backgroundColor:
+          "color-mix(in srgb, var(--color-background-card) 88%, transparent)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
       },

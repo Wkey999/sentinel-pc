@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { hardwareInfoSchema } from "../src/domain/contracts";
+import { buildHardwareAnswer } from "../src/domain/hardware-answer";
 import { hardwareDemo } from "../src/services/hardware-demo";
 
 const nativeCall = vi.hoisted(() => vi.fn());
@@ -26,6 +27,9 @@ describe("启动硬件信息", () => {
       expect(
         info.groups.find((group) => group.id === "cpu")?.items.length,
       ).toBeGreaterThan(0);
+      const cpu = info.groups.find((group) => group.id === "cpu")!.items[0]!
+        .name;
+      expect(buildHardwareAnswer("我的CPU是什么？", info)).toContain(cpu);
     },
   );
   it("保留多条内存与全部分组，拒绝重复分组、额外敏感字段", () => {

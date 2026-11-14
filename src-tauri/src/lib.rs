@@ -28,6 +28,114 @@ use tauri::{Manager, State, WebviewWindow};
 type AppStore = Arc<Backend>;
 type Result<T> = std::result::Result<T, String>;
 
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ChatLookup {
+    conversation_id: String,
+    case_id: Option<String>,
+}
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ChatDelete {
+    conversation_id: String,
+}
+#[tauri::command]
+fn get_chat(
+    window: WebviewWindow,
+    state: State<AppStore>,
+    request: ChatLookup,
+) -> Result<sentinel_core::chat::Conversation> {
+    access(&window)?;
+    state
+        .store
+        .lock()
+        .map_err(|_| "对话存储不可用。")?
+        .get_chat(&request.conversation_id, request.case_id.as_deref())
+}
+#[tauri::command]
+fn list_chats(
+    window: WebviewWindow,
+    state: State<AppStore>,
+) -> Result<Vec<sentinel_core::chat::Conversation>> {
+    access(&window)?;
+    state
+        .store
+        .lock()
+        .map_err(|_| "对话存储不可用。")?
+        .list_chats()
+}
+#[tauri::command]
+fn delete_chat(window: WebviewWindow, state: State<AppStore>, request: ChatDelete) -> Result<()> {
+    access(&window)?;
+    state
+        .store
+        .lock()
+        .map_err(|_| "对话存储不可用。")?
+        .delete_chat(&request.conversation_id)
+}
+fn push_js_string(out: &mut String, s: &str) {
+    use std::fmt::Write;
+    out.push('"');
+    for ch in s.chars() {
+        match ch {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '<' => out.push_str("\\u003c"),
+            '\u{2028}' => out.push_str("\\u2028"),
+            '\u{2029}' => out.push_str("\\u2029"),
+            c if (c as u32) < 0x20 => {
+                let _ = write!(out, "\\u{:04x}", c as u32);
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+}
+
+#[tauri::command]
+async fn send_chat(
+    window: WebviewWindow,
+    state: State<'_, AppStore>,
+    request: sentinel_core::chat::ChatRequest,
+) -> Result<sentinel_core::chat::Conversation> {
+    access(&window)?;
+    let (conversation, input) = state
+        .store
+        .lock()
+        .map_err(|_| "对话存储不可用。")?
+        .chat_input(&request)?;
+    let gateway = state
+        .gateway
+        .lock()
+        .map_err(|_| "模型服务不可用。")?
+        .clone();
+    let allow = request.allow_model;
+    let stream_window = window.clone();
+    let cid = request.conversation_id.clone();
+    let reply = tauri::async_runtime::spawn_blocking(move || {
+        gateway.chat_stream(input, allow, move |partial| {
+            let mut script = String::from(
+                "window.dispatchEvent(new CustomEvent('sentinel-chat-stream',{detail:{conversationId:",
+            );
+            push_js_string(&mut script, &cid);
+            script.push_str(",text:");
+            push_js_string(&mut script, partial);
+            script.push_str("}}));");
+            let _ = stream_window.eval(&script);
+        })
+    })
+    .await
+    .map_err(|_| "对话服务失败。")?;
+    state
+        .store
+        .lock()
+        .map_err(|_| "对话存储不可用。")?
+        .save_chat_reply(&request, conversation.messages.len(), reply)
+}
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AppStatus {
@@ -509,9 +617,10 @@ fn open_windows_settings(window: WebviewWindow, request: OpenSettingsRequest) ->
         "ms-settings:gaming-gamemode",
         "ms-settings:display-advancedgraphics",
         "ms-settings:storagesense",
+        "https://www.tbtool.cn/",
     ];
     if !ALLOWED.contains(&request.uri.as_str()) {
-        return Err("仅允许跳转受信任的 Windows 系统设置页面。".into());
+        return Err("仅允许跳转受信任的 Windows 系统设置或官方工具下载页面。".into());
     }
     #[cfg(windows)]
     {
@@ -519,7 +628,7 @@ fn open_windows_settings(window: WebviewWindow, request: OpenSettingsRequest) ->
     }
     #[cfg(not(windows))]
     {
-        Err("仅在 Windows 桌面端支持直达系统设置。".into())
+        Err("仅在 Windows 桌面端支持直达系统设置或外部页面。".into())
     }
 }
 
@@ -565,6 +674,10 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            get_chat,
+            list_chats,
+            delete_chat,
+            send_chat,
             get_app_status,
             get_backend_capabilities,
             get_hardware_info,

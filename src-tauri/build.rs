@@ -1,6 +1,10 @@
 fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "get_chat",
+            "list_chats",
+            "delete_chat",
+            "send_chat",
             "get_app_status",
             "get_hardware_info",
             "create_case",

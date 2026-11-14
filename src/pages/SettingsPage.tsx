@@ -44,6 +44,7 @@ export function SettingsPage({
   );
   const [apiKey, setApiKey] = useState("");
   const [modelBusy, setModelBusy] = useState(false);
+  const [testingModel, setTestingModel] = useState(false);
   const [modelFeedback, setModelFeedback] = useState<{
     kind: "success" | "error";
     text: string;
@@ -53,7 +54,7 @@ export function SettingsPage({
   const realEnabled = Boolean(capabilities?.realCollectionEnabled);
 
   async function handleSaveModel() {
-    if (modelBusy) return;
+    if (modelBusy || testingModel) return;
     setModelBusy(true);
     setModelFeedback(null);
     try {
@@ -80,7 +81,7 @@ export function SettingsPage({
   }
 
   async function handleClearModel() {
-    if (modelBusy) return;
+    if (modelBusy || testingModel) return;
     setModelBusy(true);
     setModelFeedback(null);
     try {
@@ -97,6 +98,54 @@ export function SettingsPage({
       });
     } finally {
       setModelBusy(false);
+    }
+  }
+
+  async function handleTestModel() {
+    if (modelBusy || testingModel) return;
+    setTestingModel(true);
+    setModelFeedback(null);
+    const probeId = `probe-${Date.now()}`;
+    try {
+      if (apiKey.trim()) {
+        await diagnostics.configureModel({
+          provider: "chat_completions",
+          endpoint: endpoint.trim(),
+          model: modelName.trim() || "deepseek-chat",
+          apiKey: apiKey.trim(),
+        });
+        setApiKey("");
+        await onCapabilitiesChanged();
+      }
+      const res = await diagnostics.sendChat({
+        conversationId: probeId,
+        caseId: null,
+        message: "连通性测试：请用一句话简短回复连接正常。",
+        hardware: null,
+        allowModel: true,
+      });
+      const last = res.messages[res.messages.length - 1];
+      if (last?.origin === "model") {
+        setModelFeedback({
+          kind: "success",
+          text: `连通性测试成功！模型回复：${last.text}`,
+        });
+      } else {
+        setModelFeedback({
+          kind: "error",
+          text:
+            last?.text ||
+            "模型未能正常响应，请检查接口地址、模型名称与 API Key。",
+        });
+      }
+    } catch (e) {
+      setModelFeedback({
+        kind: "error",
+        text: e instanceof Error ? e.message : "连通性测试失败。",
+      });
+    } finally {
+      await diagnostics.deleteChat(probeId).catch(() => undefined);
+      setTestingModel(false);
     }
   }
 
@@ -247,7 +296,7 @@ export function SettingsPage({
                       ? `已配置远程大模型端点：${capabilities.modelTarget ?? "已加密保存"}`
                       : "AI 模型当前处于离线规则兜底模式"
                   }
-                  description="AI 负责问诊追问与通俗翻译报告，绝不持有系统命令执行权。支持填写 DeepSeek 或兼容 HTTPS 网关地址；配置仅用 Windows DPAPI 加密存放在本机。"
+                  description="AI 支持多轮问答，结合本机硬件快照与体检摘要解释问题；不持有系统命令执行权。支持填写 DeepSeek 或兼容 HTTPS 网关地址；配置仅用 Windows DPAPI 加密存放在本机。"
                 />
                 <Card variant="default" padding={5}>
                   <VStack gap={4}>
@@ -282,18 +331,38 @@ export function SettingsPage({
                         title={modelFeedback.text}
                       />
                     ) : null}
-                    <HStack gap={2} hAlign="end" width="100%">
+                    <HStack gap={2} hAlign="end" width="100%" wrap="wrap">
                       <Button
                         label="清除本地凭据"
                         variant="secondary"
-                        isDisabled={modelBusy || !capabilities?.modelConfigured}
+                        isDisabled={
+                          modelBusy ||
+                          testingModel ||
+                          !capabilities?.modelConfigured
+                        }
                         onClick={() => void handleClearModel()}
+                      />
+                      <Button
+                        label={
+                          testingModel ? "正在测试连通性…" : "测试模型连通性"
+                        }
+                        variant="secondary"
+                        isDisabled={
+                          modelBusy ||
+                          testingModel ||
+                          (!capabilities?.modelConfigured &&
+                            (!endpoint.trim() || !apiKey.trim()))
+                        }
+                        onClick={() => void handleTestModel()}
                       />
                       <Button
                         label={modelBusy ? "保存中…" : "安全保存配置"}
                         variant="primary"
                         isDisabled={
-                          modelBusy || !endpoint.trim() || !apiKey.trim()
+                          modelBusy ||
+                          testingModel ||
+                          !endpoint.trim() ||
+                          !apiKey.trim()
                         }
                         onClick={() => void handleSaveModel()}
                       />

@@ -4,9 +4,15 @@ import * as c from "../domain/contracts";
 import { MockService } from "./mock";
 import { hardwareDemo } from "./hardware-demo";
 import { createHardwareCache } from "./hardware-cache";
+import { createModelReminder } from "./model-reminder";
 
 const native = isTauri();
+export const modelReminder = createModelReminder(
+  () => localStorage,
+  `sentinel.ai-reminder.${native ? "native" : "preview"}.v1`,
+);
 const mock = new MockService();
+const previewChats = new Map<string, c.Conversation>();
 const hardwareCache = createHardwareCache({
   origin: native ? "windows_native" : "browser_demo",
   storage: () => localStorage,
@@ -28,6 +34,58 @@ async function call<T>(
   return schema.parse(result);
 }
 export const diagnostics = {
+  getChat: (conversationId: string, caseId: string | null) =>
+    call(
+      "get_chat",
+      { conversationId, caseId },
+      c.conversationSchema,
+      async () =>
+        previewChats.get(conversationId) ?? {
+          id: conversationId,
+          caseId,
+          title: "",
+          messages: [],
+          updatedAtUtc: "",
+        },
+    ),
+  listChats: () =>
+    call("list_chats", undefined, z.array(c.conversationSchema), async () =>
+      [...previewChats.values()]
+        .filter((c) => !c.caseId)
+        .map((c) => ({ ...c, messages: [] })),
+    ),
+  deleteChat: (conversationId: string) =>
+    call("delete_chat", { conversationId }, z.null(), async () => {
+      previewChats.delete(conversationId);
+      return null;
+    }),
+  sendChat: (request: {
+    conversationId: string;
+    caseId: string | null;
+    message: string;
+    hardware: c.HardwareInfo | null;
+    allowModel: boolean;
+  }) =>
+    call("send_chat", request, c.conversationSchema, async () => {
+      const previous = previewChats.get(request.conversationId);
+      const result: c.Conversation = {
+        id: request.conversationId,
+        caseId: request.caseId,
+        title: previous?.title || request.message.slice(0, 32),
+        updatedAtUtc: new Date().toISOString(),
+        messages: [
+          ...(previous?.messages ?? []),
+          { role: "user", text: request.message, origin: "user" },
+          {
+            role: "assistant",
+            text: "浏览器预览未连接 AI 模型。本次仅验证对话界面；请在桌面端配置模型后使用真实问答。",
+            origin: "browser_preview",
+          },
+        ],
+      };
+      previewChats.set(result.id, result);
+      return result;
+    }),
   hardware: hardwareCache.get,
   cachedHardware: hardwareCache.peek,
   hardwareIsFresh: hardwareCache.isFresh,
@@ -187,10 +245,19 @@ export const diagnostics = {
       c.exportResultSchema,
       () => mock.export(r),
     ),
-  openWindowsSettings: (uri: string) =>
-    call("open_windows_settings", { uri }, z.null(), async () => {
-      throw new Error(
-        "浏览器预览模式无法跳转本机 Windows 设置，请在桌面端使用。",
-      );
-    }),
+  openWindowsSettings: async (
+    uri: string,
+  ): Promise<{ ok: boolean; desktop: boolean }> => {
+    if (native) {
+      await invoke("open_windows_settings", { request: { uri } });
+      return { ok: true, desktop: true };
+    }
+    if (typeof window !== "undefined" && uri.startsWith("https://")) {
+      window.open(uri, "_blank", "noopener,noreferrer");
+      return { ok: true, desktop: false };
+    }
+    throw new Error(
+      "浏览器预览模式无法跳转本机 Windows 设置，请在桌面端使用。",
+    );
+  },
 };

@@ -355,7 +355,59 @@ pub(super) fn analyze(evidence: &[Evidence], coverage: &[Coverage]) -> Analysis 
         "本轮没有实现可核验的 PCIe 平台上限与链路采样。".into(),
         &["空闲低链路速度不证明瓶颈；未主动加负载。"],
     ));
-    a.checks.push(result(
+    let sensors: Vec<_> = evidence
+        .iter()
+        .filter(|e| {
+            e.kind == "setup.sensor_log"
+                && field(e, "measurementOrigin") == "imported_report_declared"
+        })
+        .collect();
+    for e in &sensors {
+        let is_flag = field(e, "sensorKind").ends_with("flag");
+        let yes = integer(e, "yesCount").unwrap_or(0);
+        let count = integer(e, "sampleCount").unwrap_or(0);
+        let state = if is_flag && yes > 0 {
+            "opportunity"
+        } else {
+            "unknown"
+        };
+        let summary = if is_flag {
+            format!(
+                "导入日志声明 {}：{count} 个有效样本中 {yes} 次为 Yes。即使全为 No，也不能排除未记录时段/未覆盖传感器的问题。",
+                field(e, "sensorLabel")
+            )
+        } else {
+            format!(
+                "导入日志声明 {}：末次 {} {}，记录最大 {} {}，{count} 个有效样本；数值本身不证明过热或供电不足。",
+                field(e, "sensorLabel"),
+                field(e, "last"),
+                field(e, "unit"),
+                field(e, "maximum"),
+                field(e, "unit")
+            )
+        };
+        a.checks.push(result(
+            AUDIT_ACTION_IDS[5],
+            "thermal_power_limits",
+            e.entity.clone(),
+            state,
+            ids(e),
+            summary.clone(),
+            &["来自用户导入日志，不是当前实时采样；时间/时区、设备、负载与文件真实性须另行核对。"],
+        ));
+        if is_flag && yes > 0 {
+            a.findings.push(super::finding(
+                "SENSOR-LIMIT-001",
+                "传感器日志记录限制标志",
+                &summary,
+                ids(e),
+                &["限制标志不直接证明散热器故障、电源额定功率不足或当前持续降频。"],
+                "对照日志时段核对当时负载、温度和设备；一次只改变一个变量后重新记录，不自动烤机。",
+            ));
+        }
+    }
+    if sensors.is_empty() {
+        a.checks.push(result(
         AUDIT_ACTION_IDS[5],
         "thermal_power_limits",
         None,
@@ -363,8 +415,9 @@ pub(super) fn analyze(evidence: &[Evidence], coverage: &[Coverage]) -> Analysis 
         vec![],
         "没有已验证的 CPU/GPU 节流传感器数据，不据 WHEA、磁盘温度或空闲低时钟确诊过热/供电不足。"
             .into(),
-        &["未安装驱动、启动外部工具或烤机。"],
+        &["缺少传感器来源，不是已确认权限不足。可在「工具与来源」导入支持的 HWiNFO 英文 CSV；不自动安装驱动或启动烤机。"],
     ));
+    }
     for id in AUDIT_ACTION_IDS {
         if !a.checks.iter().any(|c| c.check_id == id) {
             a.checks.push(result(

@@ -1,0 +1,2089 @@
+[
+  {
+    "id": "gaming_display",
+    "category": "gaming_display",
+    "title": "游戏黑屏后闪退：TDR + 应用崩溃 + WER",
+    "expectedRuleIds": [
+      "WIN-DISPLAY-001",
+      "WIN-APP-001",
+      "TIMELINE-APP-001"
+    ],
+    "draft": {
+      "id": "f056a96c-cfee-444f-b1ee-48df8d482119",
+      "title": "游戏与显示异常",
+      "symptom": "【合成测试】游戏黑屏后闪退：TDR + 应用崩溃 + WER",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:15.109612700+00:00",
+      "status": "draft",
+      "plan": null,
+      "report": null,
+      "diagnostic": {
+        "category": "gaming_display",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "58d2395f-58d3-4a8c-8c0c-171d8dad3427",
+            "status": "draft",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:15.109623600+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "planned": {
+      "id": "f056a96c-cfee-444f-b1ee-48df8d482119",
+      "title": "游戏与显示异常",
+      "symptom": "【合成测试】游戏黑屏后闪退：TDR + 应用崩溃 + WER",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:15.109612700+00:00",
+      "status": "awaiting_consent",
+      "plan": {
+        "id": "ff0d413a-7534-4c5f-9339-c3de952689b5",
+        "caseId": "f056a96c-cfee-444f-b1ee-48df8d482119",
+        "revision": 1,
+        "hash": "2dc1f4a77cc4f5c5a52328d29ad8bff2b3284d5706799c850c1bb6ba7d2d4e90",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "58d2395f-58d3-4a8c-8c0c-171d8dad3427"
+      },
+      "report": null,
+      "diagnostic": {
+        "category": "gaming_display",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "58d2395f-58d3-4a8c-8c0c-171d8dad3427",
+            "status": "awaiting_consent",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:15.109623600+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "collecting": {
+      "id": "f056a96c-cfee-444f-b1ee-48df8d482119",
+      "title": "游戏与显示异常",
+      "symptom": "【合成测试】游戏黑屏后闪退：TDR + 应用崩溃 + WER",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:15.109612700+00:00",
+      "status": "collecting",
+      "plan": {
+        "id": "ff0d413a-7534-4c5f-9339-c3de952689b5",
+        "caseId": "f056a96c-cfee-444f-b1ee-48df8d482119",
+        "revision": 1,
+        "hash": "2dc1f4a77cc4f5c5a52328d29ad8bff2b3284d5706799c850c1bb6ba7d2d4e90",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "58d2395f-58d3-4a8c-8c0c-171d8dad3427"
+      },
+      "report": null,
+      "diagnostic": {
+        "category": "gaming_display",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "58d2395f-58d3-4a8c-8c0c-171d8dad3427",
+            "status": "collecting",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:15.109623600+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "completed": {
+      "id": "f056a96c-cfee-444f-b1ee-48df8d482119",
+      "title": "游戏与显示异常",
+      "symptom": "【合成测试】游戏黑屏后闪退：TDR + 应用崩溃 + WER",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:15.109612700+00:00",
+      "status": "completed",
+      "plan": {
+        "id": "ff0d413a-7534-4c5f-9339-c3de952689b5",
+        "caseId": "f056a96c-cfee-444f-b1ee-48df8d482119",
+        "revision": 1,
+        "hash": "2dc1f4a77cc4f5c5a52328d29ad8bff2b3284d5706799c850c1bb6ba7d2d4e90",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "58d2395f-58d3-4a8c-8c0c-171d8dad3427"
+      },
+      "report": {
+        "schemaVersion": 1,
+        "provenance": "synthetic",
+        "ruleVersion": "calibrated-0.2.0",
+        "generatedAtUtc": "2026-11-14T10:27:15.110600+00:00",
+        "findings": [
+          {
+            "id": "finding-WIN-DISPLAY-001-tdr",
+            "ruleId": "WIN-DISPLAY-001",
+            "title": "显示驱动出现恢复记录",
+            "observation": "存在显示驱动停止响应后恢复的事件；不能仅凭 TDR 认定显卡硬件损坏。",
+            "evidenceIds": [
+              "tdr"
+            ],
+            "strength": "对记录内容较强；对根因不足",
+            "limitations": [
+              "时间接近不等于因果；未覆盖的检查不能视为排除。"
+            ],
+            "nextStep": "记录驱动版本、运行的游戏与后台叠加层；每次只调整一个因素后复测。"
+          },
+          {
+            "id": "finding-WIN-APP-001-app",
+            "ruleId": "WIN-APP-001",
+            "title": "应用出现崩溃记录",
+            "observation": "应用异常记录提供模块和异常线索；ntdll.dll 等系统 DLL 不是直接根因结论。",
+            "evidenceIds": [
+              "app"
+            ],
+            "strength": "对记录内容较强；对根因不足",
+            "limitations": [
+              "时间接近不等于因果；未覆盖的检查不能视为排除。"
+            ],
+            "nextStep": "记录程序版本与近期插件变更；由用户先停用一个相关插件再复测，不替换系统 DLL。"
+          },
+          {
+            "id": "finding-TIMELINE-APP-001-app-wer",
+            "ruleId": "TIMELINE-APP-001",
+            "title": "应用异常与 WER 满足受限时间关联",
+            "observation": "同一来源、应用身份与已知启动会话中的 WER 出现在应用异常后 120 秒内，可并列查看。",
+            "evidenceIds": [
+              "app",
+              "wer"
+            ],
+            "strength": "对记录内容较强；对根因不足",
+            "limitations": [
+              "关联不证明因果；启动会话未知或不同实体的记录不合并。"
+            ],
+            "nextStep": "核对应用版本和异常代码，再选择一个变量复测。"
+          }
+        ],
+        "evidence": [
+          {
+            "id": "tdr",
+            "kind": "windows.event",
+            "source": "fixture:fault-lab",
+            "observedAtUtc": "2026-11-14T01:30:00Z",
+            "provider": "Display",
+            "channel": "System",
+            "eventId": 4101,
+            "schemaVersion": 0,
+            "recordId": 1,
+            "entity": "SYNTHETIC.exe",
+            "bootSession": "fixture-boot",
+            "fields": {
+              "measurementOrigin": "synthetic_fixture"
+            }
+          },
+          {
+            "id": "app",
+            "kind": "windows.event",
+            "source": "fixture:fault-lab",
+            "observedAtUtc": "2026-11-14T01:30:00Z",
+            "provider": "Application Error",
+            "channel": "Application",
+            "eventId": 1000,
+            "schemaVersion": 0,
+            "recordId": 1,
+            "entity": "SYNTHETIC.exe",
+            "bootSession": "fixture-boot",
+            "fields": {
+              "measurementOrigin": "synthetic_fixture"
+            }
+          },
+          {
+            "id": "wer",
+            "kind": "windows.event",
+            "source": "fixture:fault-lab",
+            "observedAtUtc": "2026-11-14T01:30:30Z",
+            "provider": "Windows Error Reporting",
+            "channel": "Application",
+            "eventId": 1001,
+            "schemaVersion": 0,
+            "recordId": 1,
+            "entity": "SYNTHETIC.exe",
+            "bootSession": "fixture-boot",
+            "fields": {
+              "measurementOrigin": "synthetic_fixture"
+            }
+          }
+        ],
+        "coverage": [
+          {
+            "source": "windows.system_snapshot",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          },
+          {
+            "source": "windows.event_window",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          }
+        ],
+        "unknowns": [
+          "合成故障样本，不是本机诊断。"
+        ]
+      },
+      "diagnostic": {
+        "category": "gaming_display",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "58d2395f-58d3-4a8c-8c0c-171d8dad3427",
+            "status": "completed",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:15.109623600+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [
+              {
+                "actionId": "windows.system_snapshot",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              },
+              {
+                "actionId": "windows.event_window",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              }
+            ],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": {
+              "schemaVersion": 1,
+              "provenance": "synthetic",
+              "ruleVersion": "calibrated-0.2.0",
+              "generatedAtUtc": "2026-11-14T10:27:15.110600+00:00",
+              "findings": [
+                {
+                  "id": "finding-WIN-DISPLAY-001-tdr",
+                  "ruleId": "WIN-DISPLAY-001",
+                  "title": "显示驱动出现恢复记录",
+                  "observation": "存在显示驱动停止响应后恢复的事件；不能仅凭 TDR 认定显卡硬件损坏。",
+                  "evidenceIds": [
+                    "tdr"
+                  ],
+                  "strength": "对记录内容较强；对根因不足",
+                  "limitations": [
+                    "时间接近不等于因果；未覆盖的检查不能视为排除。"
+                  ],
+                  "nextStep": "记录驱动版本、运行的游戏与后台叠加层；每次只调整一个因素后复测。"
+                },
+                {
+                  "id": "finding-WIN-APP-001-app",
+                  "ruleId": "WIN-APP-001",
+                  "title": "应用出现崩溃记录",
+                  "observation": "应用异常记录提供模块和异常线索；ntdll.dll 等系统 DLL 不是直接根因结论。",
+                  "evidenceIds": [
+                    "app"
+                  ],
+                  "strength": "对记录内容较强；对根因不足",
+                  "limitations": [
+                    "时间接近不等于因果；未覆盖的检查不能视为排除。"
+                  ],
+                  "nextStep": "记录程序版本与近期插件变更；由用户先停用一个相关插件再复测，不替换系统 DLL。"
+                },
+                {
+                  "id": "finding-TIMELINE-APP-001-app-wer",
+                  "ruleId": "TIMELINE-APP-001",
+                  "title": "应用异常与 WER 满足受限时间关联",
+                  "observation": "同一来源、应用身份与已知启动会话中的 WER 出现在应用异常后 120 秒内，可并列查看。",
+                  "evidenceIds": [
+                    "app",
+                    "wer"
+                  ],
+                  "strength": "对记录内容较强；对根因不足",
+                  "limitations": [
+                    "关联不证明因果；启动会话未知或不同实体的记录不合并。"
+                  ],
+                  "nextStep": "核对应用版本和异常代码，再选择一个变量复测。"
+                }
+              ],
+              "evidence": [
+                {
+                  "id": "tdr",
+                  "kind": "windows.event",
+                  "source": "fixture:fault-lab",
+                  "observedAtUtc": "2026-11-14T01:30:00Z",
+                  "provider": "Display",
+                  "channel": "System",
+                  "eventId": 4101,
+                  "schemaVersion": 0,
+                  "recordId": 1,
+                  "entity": "SYNTHETIC.exe",
+                  "bootSession": "fixture-boot",
+                  "fields": {
+                    "measurementOrigin": "synthetic_fixture"
+                  }
+                },
+                {
+                  "id": "app",
+                  "kind": "windows.event",
+                  "source": "fixture:fault-lab",
+                  "observedAtUtc": "2026-11-14T01:30:00Z",
+                  "provider": "Application Error",
+                  "channel": "Application",
+                  "eventId": 1000,
+                  "schemaVersion": 0,
+                  "recordId": 1,
+                  "entity": "SYNTHETIC.exe",
+                  "bootSession": "fixture-boot",
+                  "fields": {
+                    "measurementOrigin": "synthetic_fixture"
+                  }
+                },
+                {
+                  "id": "wer",
+                  "kind": "windows.event",
+                  "source": "fixture:fault-lab",
+                  "observedAtUtc": "2026-11-14T01:30:30Z",
+                  "provider": "Windows Error Reporting",
+                  "channel": "Application",
+                  "eventId": 1001,
+                  "schemaVersion": 0,
+                  "recordId": 1,
+                  "entity": "SYNTHETIC.exe",
+                  "bootSession": "fixture-boot",
+                  "fields": {
+                    "measurementOrigin": "synthetic_fixture"
+                  }
+                }
+              ],
+              "coverage": [
+                {
+                  "source": "windows.system_snapshot",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                },
+                {
+                  "source": "windows.event_window",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                }
+              ],
+              "unknowns": [
+                "合成故障样本，不是本机诊断。"
+              ]
+            },
+            "explanation": {
+              "origin": "local_rules",
+              "summary": "以下是记录中的观察与排查顺序，不是唯一根因诊断。",
+              "exclusions": [
+                "现有证据不足以排除未覆盖的硬件、驱动和软件因素。"
+              ],
+              "recommendations": [
+                {
+                  "priority": 1,
+                  "instruction": "记录驱动版本、运行的游戏与后台叠加层；每次只调整一个因素后复测。",
+                  "expectedResult": "记录是否复现、发生时间和新提示；只改变一个变量后发起复测。",
+                  "stopCondition": "出现数据丢失、持续掉盘或系统不稳定时停止复现，先保存资料。",
+                  "evidenceIds": [
+                    "tdr"
+                  ]
+                },
+                {
+                  "priority": 2,
+                  "instruction": "记录程序版本与近期插件变更；由用户先停用一个相关插件再复测，不替换系统 DLL。",
+                  "expectedResult": "记录是否复现、发生时间和新提示；只改变一个变量后发起复测。",
+                  "stopCondition": "出现数据丢失、持续掉盘或系统不稳定时停止复现，先保存资料。",
+                  "evidenceIds": [
+                    "app"
+                  ]
+                },
+                {
+                  "priority": 3,
+                  "instruction": "核对应用版本和异常代码，再选择一个变量复测。",
+                  "expectedResult": "记录是否复现、发生时间和新提示；只改变一个变量后发起复测。",
+                  "stopCondition": "出现数据丢失、持续掉盘或系统不稳定时停止复现，先保存资料。",
+                  "evidenceIds": [
+                    "app",
+                    "wer"
+                  ]
+                }
+              ],
+              "fallbackReason": "模型未配置或不可用，使用本地规则。",
+              "suggestedActionIds": []
+            },
+            "comparison": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "restart_bsod",
+    "category": "restart_bsod",
+    "title": "蓝屏后重启：BugCheck + Kernel-Power 41",
+    "expectedRuleIds": [
+      "WIN-RESTART-001",
+      "WIN-RESTART-001"
+    ],
+    "draft": {
+      "id": "108a063b-b9ca-4ea7-9329-e447868604ff",
+      "title": "重启与蓝屏",
+      "symptom": "【合成测试】蓝屏后重启：BugCheck + Kernel-Power 41",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:16.095463400+00:00",
+      "status": "draft",
+      "plan": null,
+      "report": null,
+      "diagnostic": {
+        "category": "restart_bsod",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "fb8cae06-1658-4982-bd23-c06fc5e3f191",
+            "status": "draft",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:16.095467400+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "planned": {
+      "id": "108a063b-b9ca-4ea7-9329-e447868604ff",
+      "title": "重启与蓝屏",
+      "symptom": "【合成测试】蓝屏后重启：BugCheck + Kernel-Power 41",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:16.095463400+00:00",
+      "status": "awaiting_consent",
+      "plan": {
+        "id": "37983e6f-0680-4e06-9645-97ce639a42cf",
+        "caseId": "108a063b-b9ca-4ea7-9329-e447868604ff",
+        "revision": 1,
+        "hash": "b9e6fa00bca8b19ddf23477bad7340a1eb9e9aef047f0b27caf5cf19bda28aca",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "fb8cae06-1658-4982-bd23-c06fc5e3f191"
+      },
+      "report": null,
+      "diagnostic": {
+        "category": "restart_bsod",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "fb8cae06-1658-4982-bd23-c06fc5e3f191",
+            "status": "awaiting_consent",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:16.095467400+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "collecting": {
+      "id": "108a063b-b9ca-4ea7-9329-e447868604ff",
+      "title": "重启与蓝屏",
+      "symptom": "【合成测试】蓝屏后重启：BugCheck + Kernel-Power 41",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:16.095463400+00:00",
+      "status": "collecting",
+      "plan": {
+        "id": "37983e6f-0680-4e06-9645-97ce639a42cf",
+        "caseId": "108a063b-b9ca-4ea7-9329-e447868604ff",
+        "revision": 1,
+        "hash": "b9e6fa00bca8b19ddf23477bad7340a1eb9e9aef047f0b27caf5cf19bda28aca",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "fb8cae06-1658-4982-bd23-c06fc5e3f191"
+      },
+      "report": null,
+      "diagnostic": {
+        "category": "restart_bsod",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "fb8cae06-1658-4982-bd23-c06fc5e3f191",
+            "status": "collecting",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:16.095467400+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "completed": {
+      "id": "108a063b-b9ca-4ea7-9329-e447868604ff",
+      "title": "重启与蓝屏",
+      "symptom": "【合成测试】蓝屏后重启：BugCheck + Kernel-Power 41",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:16.095463400+00:00",
+      "status": "completed",
+      "plan": {
+        "id": "37983e6f-0680-4e06-9645-97ce639a42cf",
+        "caseId": "108a063b-b9ca-4ea7-9329-e447868604ff",
+        "revision": 1,
+        "hash": "b9e6fa00bca8b19ddf23477bad7340a1eb9e9aef047f0b27caf5cf19bda28aca",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "fb8cae06-1658-4982-bd23-c06fc5e3f191"
+      },
+      "report": {
+        "schemaVersion": 1,
+        "provenance": "synthetic",
+        "ruleVersion": "calibrated-0.2.0",
+        "generatedAtUtc": "2026-11-14T10:27:16.096091900+00:00",
+        "findings": [
+          {
+            "id": "finding-WIN-RESTART-001-kp41",
+            "ruleId": "WIN-RESTART-001",
+            "title": "记录到未正常关机后的启动",
+            "observation": "该事件记录上次关机未正常完成，不能单独判断电源或其他硬件损坏。",
+            "evidenceIds": [
+              "kp41"
+            ],
+            "strength": "对记录内容较强；对根因不足",
+            "limitations": [
+              "时间接近不等于因果；未覆盖的检查不能视为排除。"
+            ],
+            "nextStep": "确认是否曾断电、长按电源或蓝屏，记录触发场景后单变量复测。"
+          },
+          {
+            "id": "finding-WIN-RESTART-001-bugcheck",
+            "ruleId": "WIN-RESTART-001",
+            "title": "记录到系统 BugCheck 报告",
+            "observation": "存在系统错误检查报告；停止代码与转储路径是线索，当前没有分析 dump。",
+            "evidenceIds": [
+              "bugcheck"
+            ],
+            "strength": "对记录内容较强；对根因不足",
+            "limitations": [
+              "时间接近不等于因果；未覆盖的检查不能视为排除。"
+            ],
+            "nextStep": "记录停止代码和近期驱动变更，先备份资料，再由用户决定是否回退近期变更并复测。"
+          }
+        ],
+        "evidence": [
+          {
+            "id": "kp41",
+            "kind": "windows.event",
+            "source": "fixture:fault-lab",
+            "observedAtUtc": "2026-11-14T01:30:00Z",
+            "provider": "Microsoft-Windows-Kernel-Power",
+            "channel": "System",
+            "eventId": 41,
+            "schemaVersion": 0,
+            "recordId": 1,
+            "entity": "SYNTHETIC.exe",
+            "bootSession": "fixture-boot",
+            "fields": {
+              "measurementOrigin": "synthetic_fixture"
+            }
+          },
+          {
+            "id": "bugcheck",
+            "kind": "windows.event",
+            "source": "fixture:fault-lab",
+            "observedAtUtc": "2026-11-14T01:30:00Z",
+            "provider": "Microsoft-Windows-WER-SystemErrorReporting",
+            "channel": "System",
+            "eventId": 1001,
+            "schemaVersion": 0,
+            "recordId": 1,
+            "entity": "SYNTHETIC.exe",
+            "bootSession": "fixture-boot",
+            "fields": {
+              "measurementOrigin": "synthetic_fixture"
+            }
+          }
+        ],
+        "coverage": [
+          {
+            "source": "windows.system_snapshot",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          },
+          {
+            "source": "windows.event_window",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          }
+        ],
+        "unknowns": [
+          "合成故障样本，不是本机诊断。"
+        ]
+      },
+      "diagnostic": {
+        "category": "restart_bsod",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "fb8cae06-1658-4982-bd23-c06fc5e3f191",
+            "status": "completed",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:16.095467400+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [
+              {
+                "actionId": "windows.system_snapshot",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              },
+              {
+                "actionId": "windows.event_window",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              }
+            ],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": {
+              "schemaVersion": 1,
+              "provenance": "synthetic",
+              "ruleVersion": "calibrated-0.2.0",
+              "generatedAtUtc": "2026-11-14T10:27:16.096091900+00:00",
+              "findings": [
+                {
+                  "id": "finding-WIN-RESTART-001-kp41",
+                  "ruleId": "WIN-RESTART-001",
+                  "title": "记录到未正常关机后的启动",
+                  "observation": "该事件记录上次关机未正常完成，不能单独判断电源或其他硬件损坏。",
+                  "evidenceIds": [
+                    "kp41"
+                  ],
+                  "strength": "对记录内容较强；对根因不足",
+                  "limitations": [
+                    "时间接近不等于因果；未覆盖的检查不能视为排除。"
+                  ],
+                  "nextStep": "确认是否曾断电、长按电源或蓝屏，记录触发场景后单变量复测。"
+                },
+                {
+                  "id": "finding-WIN-RESTART-001-bugcheck",
+                  "ruleId": "WIN-RESTART-001",
+                  "title": "记录到系统 BugCheck 报告",
+                  "observation": "存在系统错误检查报告；停止代码与转储路径是线索，当前没有分析 dump。",
+                  "evidenceIds": [
+                    "bugcheck"
+                  ],
+                  "strength": "对记录内容较强；对根因不足",
+                  "limitations": [
+                    "时间接近不等于因果；未覆盖的检查不能视为排除。"
+                  ],
+                  "nextStep": "记录停止代码和近期驱动变更，先备份资料，再由用户决定是否回退近期变更并复测。"
+                }
+              ],
+              "evidence": [
+                {
+                  "id": "kp41",
+                  "kind": "windows.event",
+                  "source": "fixture:fault-lab",
+                  "observedAtUtc": "2026-11-14T01:30:00Z",
+                  "provider": "Microsoft-Windows-Kernel-Power",
+                  "channel": "System",
+                  "eventId": 41,
+                  "schemaVersion": 0,
+                  "recordId": 1,
+                  "entity": "SYNTHETIC.exe",
+                  "bootSession": "fixture-boot",
+                  "fields": {
+                    "measurementOrigin": "synthetic_fixture"
+                  }
+                },
+                {
+                  "id": "bugcheck",
+                  "kind": "windows.event",
+                  "source": "fixture:fault-lab",
+                  "observedAtUtc": "2026-11-14T01:30:00Z",
+                  "provider": "Microsoft-Windows-WER-SystemErrorReporting",
+                  "channel": "System",
+                  "eventId": 1001,
+                  "schemaVersion": 0,
+                  "recordId": 1,
+                  "entity": "SYNTHETIC.exe",
+                  "bootSession": "fixture-boot",
+                  "fields": {
+                    "measurementOrigin": "synthetic_fixture"
+                  }
+                }
+              ],
+              "coverage": [
+                {
+                  "source": "windows.system_snapshot",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                },
+                {
+                  "source": "windows.event_window",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                }
+              ],
+              "unknowns": [
+                "合成故障样本，不是本机诊断。"
+              ]
+            },
+            "explanation": {
+              "origin": "local_rules",
+              "summary": "以下是记录中的观察与排查顺序，不是唯一根因诊断。",
+              "exclusions": [
+                "现有证据不足以排除未覆盖的硬件、驱动和软件因素。"
+              ],
+              "recommendations": [
+                {
+                  "priority": 1,
+                  "instruction": "确认是否曾断电、长按电源或蓝屏，记录触发场景后单变量复测。",
+                  "expectedResult": "记录是否复现、发生时间和新提示；只改变一个变量后发起复测。",
+                  "stopCondition": "出现数据丢失、持续掉盘或系统不稳定时停止复现，先保存资料。",
+                  "evidenceIds": [
+                    "kp41"
+                  ]
+                },
+                {
+                  "priority": 2,
+                  "instruction": "记录停止代码和近期驱动变更，先备份资料，再由用户决定是否回退近期变更并复测。",
+                  "expectedResult": "记录是否复现、发生时间和新提示；只改变一个变量后发起复测。",
+                  "stopCondition": "出现数据丢失、持续掉盘或系统不稳定时停止复现，先保存资料。",
+                  "evidenceIds": [
+                    "bugcheck"
+                  ]
+                }
+              ],
+              "fallbackReason": "模型未配置或不可用，使用本地规则。",
+              "suggestedActionIds": []
+            },
+            "comparison": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "storage_io",
+    "category": "storage_io",
+    "title": "磁盘健康告警：解析 smartctl ATA 样本",
+    "expectedRuleIds": [
+      "STORAGE-001"
+    ],
+    "draft": {
+      "id": "a9df4f82-0727-4ab0-a927-8be388ca417d",
+      "title": "存储与读写异常",
+      "symptom": "【合成测试】磁盘健康告警：解析 smartctl ATA 样本",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:16.765508600+00:00",
+      "status": "draft",
+      "plan": null,
+      "report": null,
+      "diagnostic": {
+        "category": "storage_io",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "115823b9-0ece-433a-9f41-52cf56dae316",
+            "status": "draft",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:16.765512500+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "planned": {
+      "id": "a9df4f82-0727-4ab0-a927-8be388ca417d",
+      "title": "存储与读写异常",
+      "symptom": "【合成测试】磁盘健康告警：解析 smartctl ATA 样本",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:16.765508600+00:00",
+      "status": "awaiting_consent",
+      "plan": {
+        "id": "427b5bd9-63c3-4d77-921b-50f41dfa0e42",
+        "caseId": "a9df4f82-0727-4ab0-a927-8be388ca417d",
+        "revision": 1,
+        "hash": "61cb0d1832740986adc17844b64ec4bbfefb7d0ac9be394b49ec5155c898ed4c",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "115823b9-0ece-433a-9f41-52cf56dae316"
+      },
+      "report": null,
+      "diagnostic": {
+        "category": "storage_io",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "115823b9-0ece-433a-9f41-52cf56dae316",
+            "status": "awaiting_consent",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:16.765512500+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "collecting": {
+      "id": "a9df4f82-0727-4ab0-a927-8be388ca417d",
+      "title": "存储与读写异常",
+      "symptom": "【合成测试】磁盘健康告警：解析 smartctl ATA 样本",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:16.765508600+00:00",
+      "status": "collecting",
+      "plan": {
+        "id": "427b5bd9-63c3-4d77-921b-50f41dfa0e42",
+        "caseId": "a9df4f82-0727-4ab0-a927-8be388ca417d",
+        "revision": 1,
+        "hash": "61cb0d1832740986adc17844b64ec4bbfefb7d0ac9be394b49ec5155c898ed4c",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "115823b9-0ece-433a-9f41-52cf56dae316"
+      },
+      "report": null,
+      "diagnostic": {
+        "category": "storage_io",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "115823b9-0ece-433a-9f41-52cf56dae316",
+            "status": "collecting",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:16.765512500+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "completed": {
+      "id": "a9df4f82-0727-4ab0-a927-8be388ca417d",
+      "title": "存储与读写异常",
+      "symptom": "【合成测试】磁盘健康告警：解析 smartctl ATA 样本",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:16.765508600+00:00",
+      "status": "completed",
+      "plan": {
+        "id": "427b5bd9-63c3-4d77-921b-50f41dfa0e42",
+        "caseId": "a9df4f82-0727-4ab0-a927-8be388ca417d",
+        "revision": 1,
+        "hash": "61cb0d1832740986adc17844b64ec4bbfefb7d0ac9be394b49ec5155c898ed4c",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "115823b9-0ece-433a-9f41-52cf56dae316"
+      },
+      "report": {
+        "schemaVersion": 1,
+        "provenance": "synthetic",
+        "ruleVersion": "calibrated-0.2.0",
+        "generatedAtUtc": "2026-11-14T10:27:16.766135300+00:00",
+        "findings": [
+          {
+            "id": "finding-STORAGE-001-ev-import-13d1b8b10bdedb81-1",
+            "ruleId": "STORAGE-001",
+            "title": "存储报告声明健康告警",
+            "observation": "受支持的解析字段包含告警；属于报告声明，不是寿命预测，也不直接解释本次所有卡顿。",
+            "evidenceIds": [
+              "ev-import-13d1b8b10bdedb81-1"
+            ],
+            "strength": "对记录内容较强；对根因不足",
+            "limitations": [
+              "时间接近不等于因果；未覆盖的检查不能视为排除。"
+            ],
+            "nextStep": "先备份重要资料；避免长测和反复复现，核对磁盘身份及报告时间，必要时寻求专业帮助。"
+          }
+        ],
+        "evidence": [
+          {
+            "id": "ev-import-13d1b8b10bdedb81-1",
+            "kind": "storage.health",
+            "source": "fixture:fault-lab",
+            "observedAtUtc": "2026-11-12T02:03:00+00:00",
+            "provider": null,
+            "channel": null,
+            "eventId": null,
+            "schemaVersion": null,
+            "recordId": null,
+            "entity": "report-13d1b8b10bdedb81-disk-1",
+            "bootSession": null,
+            "fields": {
+              "declaredHealth": "failed",
+              "locator": "json:/",
+              "measurementOrigin": "synthetic_fixture",
+              "model": "SYNTHETIC SATA SSD",
+              "protocol": "ATA",
+              "serialNumber": "SYNTHETIC-ATA-001",
+              "tool": "smartctl",
+              "toolExitStatus": "8",
+              "toolVersionDeclared": "7.4"
+            }
+          }
+        ],
+        "coverage": [
+          {
+            "source": "windows.system_snapshot",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          },
+          {
+            "source": "windows.event_window",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          }
+        ],
+        "unknowns": [
+          "合成故障样本，不是本机诊断。"
+        ]
+      },
+      "diagnostic": {
+        "category": "storage_io",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "115823b9-0ece-433a-9f41-52cf56dae316",
+            "status": "completed",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:16.765512500+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [
+              {
+                "actionId": "windows.system_snapshot",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              },
+              {
+                "actionId": "windows.event_window",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              }
+            ],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": {
+              "schemaVersion": 1,
+              "provenance": "synthetic",
+              "ruleVersion": "calibrated-0.2.0",
+              "generatedAtUtc": "2026-11-14T10:27:16.766135300+00:00",
+              "findings": [
+                {
+                  "id": "finding-STORAGE-001-ev-import-13d1b8b10bdedb81-1",
+                  "ruleId": "STORAGE-001",
+                  "title": "存储报告声明健康告警",
+                  "observation": "受支持的解析字段包含告警；属于报告声明，不是寿命预测，也不直接解释本次所有卡顿。",
+                  "evidenceIds": [
+                    "ev-import-13d1b8b10bdedb81-1"
+                  ],
+                  "strength": "对记录内容较强；对根因不足",
+                  "limitations": [
+                    "时间接近不等于因果；未覆盖的检查不能视为排除。"
+                  ],
+                  "nextStep": "先备份重要资料；避免长测和反复复现，核对磁盘身份及报告时间，必要时寻求专业帮助。"
+                }
+              ],
+              "evidence": [
+                {
+                  "id": "ev-import-13d1b8b10bdedb81-1",
+                  "kind": "storage.health",
+                  "source": "fixture:fault-lab",
+                  "observedAtUtc": "2026-11-12T02:03:00+00:00",
+                  "provider": null,
+                  "channel": null,
+                  "eventId": null,
+                  "schemaVersion": null,
+                  "recordId": null,
+                  "entity": "report-13d1b8b10bdedb81-disk-1",
+                  "bootSession": null,
+                  "fields": {
+                    "declaredHealth": "failed",
+                    "locator": "json:/",
+                    "measurementOrigin": "synthetic_fixture",
+                    "model": "SYNTHETIC SATA SSD",
+                    "protocol": "ATA",
+                    "serialNumber": "SYNTHETIC-ATA-001",
+                    "tool": "smartctl",
+                    "toolExitStatus": "8",
+                    "toolVersionDeclared": "7.4"
+                  }
+                }
+              ],
+              "coverage": [
+                {
+                  "source": "windows.system_snapshot",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                },
+                {
+                  "source": "windows.event_window",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                }
+              ],
+              "unknowns": [
+                "合成故障样本，不是本机诊断。"
+              ]
+            },
+            "explanation": {
+              "origin": "local_rules",
+              "summary": "以下是记录中的观察与排查顺序，不是唯一根因诊断。",
+              "exclusions": [
+                "现有证据不足以排除未覆盖的硬件、驱动和软件因素。"
+              ],
+              "recommendations": [
+                {
+                  "priority": 1,
+                  "instruction": "先备份重要资料；避免长测和反复复现，核对磁盘身份及报告时间，必要时寻求专业帮助。",
+                  "expectedResult": "记录是否复现、发生时间和新提示；只改变一个变量后发起复测。",
+                  "stopCondition": "出现数据丢失、持续掉盘或系统不稳定时停止复现，先保存资料。",
+                  "evidenceIds": [
+                    "ev-import-13d1b8b10bdedb81-1"
+                  ]
+                }
+              ],
+              "fallbackReason": "模型未配置或不可用，使用本地规则。",
+              "suggestedActionIds": []
+            },
+            "comparison": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "office_peripheral",
+    "category": "office_peripheral",
+    "title": "办公无响应与设备错误码：不能直接认定物理断连",
+    "expectedRuleIds": [
+      "WIN-APP-002",
+      "WIN-USB-001"
+    ],
+    "draft": {
+      "id": "f8db1f89-affa-4884-bca3-deaa4cbde3ba",
+      "title": "办公应用与外设异常",
+      "symptom": "【合成测试】办公无响应与设备错误码：不能直接认定物理断连",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:17.216836600+00:00",
+      "status": "draft",
+      "plan": null,
+      "report": null,
+      "diagnostic": {
+        "category": "office_peripheral",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "09b16e8e-438d-4158-bc2d-cdf132a4ddc0",
+            "status": "draft",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:17.216840700+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "planned": {
+      "id": "f8db1f89-affa-4884-bca3-deaa4cbde3ba",
+      "title": "办公应用与外设异常",
+      "symptom": "【合成测试】办公无响应与设备错误码：不能直接认定物理断连",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:17.216836600+00:00",
+      "status": "awaiting_consent",
+      "plan": {
+        "id": "46c9f704-0720-44c0-9015-c27fc3d0d1cd",
+        "caseId": "f8db1f89-affa-4884-bca3-deaa4cbde3ba",
+        "revision": 1,
+        "hash": "062b288b83bdba6bf46325661c501dabde1ccb8df0224165a27e30f110654664",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window",
+          "usb_pnp.snapshot"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "usb_pnp.snapshot",
+            "description": "读取当前 PnP 设备状态；不禁用或重启设备",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "09b16e8e-438d-4158-bc2d-cdf132a4ddc0"
+      },
+      "report": null,
+      "diagnostic": {
+        "category": "office_peripheral",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "09b16e8e-438d-4158-bc2d-cdf132a4ddc0",
+            "status": "awaiting_consent",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:17.216840700+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "collecting": {
+      "id": "f8db1f89-affa-4884-bca3-deaa4cbde3ba",
+      "title": "办公应用与外设异常",
+      "symptom": "【合成测试】办公无响应与设备错误码：不能直接认定物理断连",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:17.216836600+00:00",
+      "status": "collecting",
+      "plan": {
+        "id": "46c9f704-0720-44c0-9015-c27fc3d0d1cd",
+        "caseId": "f8db1f89-affa-4884-bca3-deaa4cbde3ba",
+        "revision": 1,
+        "hash": "062b288b83bdba6bf46325661c501dabde1ccb8df0224165a27e30f110654664",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window",
+          "usb_pnp.snapshot"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "usb_pnp.snapshot",
+            "description": "读取当前 PnP 设备状态；不禁用或重启设备",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "09b16e8e-438d-4158-bc2d-cdf132a4ddc0"
+      },
+      "report": null,
+      "diagnostic": {
+        "category": "office_peripheral",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "09b16e8e-438d-4158-bc2d-cdf132a4ddc0",
+            "status": "collecting",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:17.216840700+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": null,
+            "explanation": null,
+            "comparison": null
+          }
+        ]
+      }
+    },
+    "completed": {
+      "id": "f8db1f89-affa-4884-bca3-deaa4cbde3ba",
+      "title": "办公应用与外设异常",
+      "symptom": "【合成测试】办公无响应与设备错误码：不能直接认定物理断连",
+      "scenarioId": "",
+      "incidentStartUtc": "2026-11-14T01:00:00Z",
+      "incidentEndUtc": "2026-11-14T02:00:00Z",
+      "displayTimezone": "Asia/Hong_Kong",
+      "environment": "personal",
+      "createdAtUtc": "2026-11-14T10:27:17.216836600+00:00",
+      "status": "completed",
+      "plan": {
+        "id": "46c9f704-0720-44c0-9015-c27fc3d0d1cd",
+        "caseId": "f8db1f89-affa-4884-bca3-deaa4cbde3ba",
+        "revision": 1,
+        "hash": "062b288b83bdba6bf46325661c501dabde1ccb8df0224165a27e30f110654664",
+        "actionIds": [
+          "windows.system_snapshot",
+          "windows.event_window",
+          "usb_pnp.snapshot"
+        ],
+        "dataScopes": [
+          "本机只读；时间窗口 2026-11-14T01:00:00Z 至 2026-11-14T02:00:00Z；不主动调用模型；外部工具需独立确认，其联网行为不能由本产品保证"
+        ],
+        "policyVersion": "calibrated-0.2.0",
+        "adapterVersion": "windows-0.2.0",
+        "scenarioId": "",
+        "incidentStartUtc": "2026-11-14T01:00:00Z",
+        "incidentEndUtc": "2026-11-14T02:00:00Z",
+        "actions": [
+          {
+            "actionId": "windows.system_snapshot",
+            "description": "读取系统、CPU、内存和显示设备概况",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "windows.event_window",
+            "description": "读取已确认时间窗口的系统、应用及设备事件；不清除日志",
+            "risk": "R1",
+            "estimatedSeconds": 60,
+            "outputLimitBytes": 10485760,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          },
+          {
+            "actionId": "usb_pnp.snapshot",
+            "description": "读取当前 PnP 设备状态；不禁用或重启设备",
+            "risk": "R0",
+            "estimatedSeconds": 30,
+            "outputLimitBytes": 2097152,
+            "requiresExternalConfirmation": false,
+            "toolToken": null,
+            "deviceToken": null
+          }
+        ],
+        "runId": "09b16e8e-438d-4158-bc2d-cdf132a4ddc0"
+      },
+      "report": {
+        "schemaVersion": 1,
+        "provenance": "synthetic",
+        "ruleVersion": "calibrated-0.2.0",
+        "generatedAtUtc": "2026-11-14T10:27:17.217545100+00:00",
+        "findings": [
+          {
+            "id": "finding-WIN-APP-002-hang",
+            "ruleId": "WIN-APP-002",
+            "title": "应用出现无响应记录",
+            "observation": "系统报告应用无响应，不能据此排除存储、插件或系统资源因素。",
+            "evidenceIds": [
+              "hang"
+            ],
+            "strength": "对记录内容较强；对根因不足",
+            "limitations": [
+              "时间接近不等于因果；未覆盖的检查不能视为排除。"
+            ],
+            "nextStep": "记录卡顿时的操作和应用版本，保存文件后只改变一个应用相关因素再复测。"
+          },
+          {
+            "id": "finding-WIN-USB-001-pnp-device",
+            "ruleId": "WIN-USB-001",
+            "title": "设备或用户模式驱动存在异常线索",
+            "observation": "PnP/驱动状态与设备相关；不代表已证实 USB 物理断连，也不自动证明设备损坏。",
+            "evidenceIds": [
+              "pnp-device"
+            ],
+            "strength": "对记录内容较强；对根因不足",
+            "limitations": [
+              "时间接近不等于因果；未覆盖的检查不能视为排除。"
+            ],
+            "nextStep": "保存工作后，由用户一次只更换一个 USB 接口或线缆，记录断连是否重复，再发起复测。"
+          }
+        ],
+        "evidence": [
+          {
+            "id": "hang",
+            "kind": "windows.event",
+            "source": "fixture:fault-lab",
+            "observedAtUtc": "2026-11-14T01:30:00Z",
+            "provider": "Application Hang",
+            "channel": "Application",
+            "eventId": 1002,
+            "schemaVersion": 0,
+            "recordId": 1,
+            "entity": "SYNTHETIC.exe",
+            "bootSession": "fixture-boot",
+            "fields": {
+              "measurementOrigin": "synthetic_fixture"
+            }
+          },
+          {
+            "id": "pnp-device",
+            "kind": "device.snapshot",
+            "source": "fixture:fault-lab",
+            "observedAtUtc": "2026-11-14T01:30:00Z",
+            "provider": "unused",
+            "channel": "unused",
+            "eventId": 0,
+            "schemaVersion": 0,
+            "recordId": 1,
+            "entity": "SYNTHETIC.exe",
+            "bootSession": "fixture-boot",
+            "fields": {
+              "configManagerErrorCode": "43",
+              "measurementOrigin": "synthetic_fixture"
+            }
+          }
+        ],
+        "coverage": [
+          {
+            "source": "windows.system_snapshot",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          },
+          {
+            "source": "windows.event_window",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          },
+          {
+            "source": "usb_pnp.snapshot",
+            "status": "available",
+            "detail": "合成回放：未运行 Windows 采集器。"
+          }
+        ],
+        "unknowns": [
+          "合成故障样本，不是本机诊断。"
+        ]
+      },
+      "diagnostic": {
+        "category": "office_peripheral",
+        "interview": {
+          "frequency": "",
+          "recentChanges": "",
+          "reproduction": "",
+          "answers": []
+        },
+        "runs": [
+          {
+            "id": "09b16e8e-438d-4158-bc2d-cdf132a4ddc0",
+            "status": "completed",
+            "changedVariable": null,
+            "userFeedback": null,
+            "createdAtUtc": "2026-11-14T10:27:17.216840700+00:00",
+            "incidentStartUtc": "2026-11-14T01:00:00Z",
+            "incidentEndUtc": "2026-11-14T02:00:00Z",
+            "tasks": [
+              {
+                "actionId": "windows.system_snapshot",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              },
+              {
+                "actionId": "windows.event_window",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              },
+              {
+                "actionId": "usb_pnp.snapshot",
+                "status": "completed",
+                "detail": "合成回放，未启动采集进程。",
+                "exitCode": null,
+                "artifactId": null
+              }
+            ],
+            "importedEvidence": [],
+            "importCoverage": [],
+            "warnings": [],
+            "report": {
+              "schemaVersion": 1,
+              "provenance": "synthetic",
+              "ruleVersion": "calibrated-0.2.0",
+              "generatedAtUtc": "2026-11-14T10:27:17.217545100+00:00",
+              "findings": [
+                {
+                  "id": "finding-WIN-APP-002-hang",
+                  "ruleId": "WIN-APP-002",
+                  "title": "应用出现无响应记录",
+                  "observation": "系统报告应用无响应，不能据此排除存储、插件或系统资源因素。",
+                  "evidenceIds": [
+                    "hang"
+                  ],
+                  "strength": "对记录内容较强；对根因不足",
+                  "limitations": [
+                    "时间接近不等于因果；未覆盖的检查不能视为排除。"
+                  ],
+                  "nextStep": "记录卡顿时的操作和应用版本，保存文件后只改变一个应用相关因素再复测。"
+                },
+                {
+                  "id": "finding-WIN-USB-001-pnp-device",
+                  "ruleId": "WIN-USB-001",
+                  "title": "设备或用户模式驱动存在异常线索",
+                  "observation": "PnP/驱动状态与设备相关；不代表已证实 USB 物理断连，也不自动证明设备损坏。",
+                  "evidenceIds": [
+                    "pnp-device"
+                  ],
+                  "strength": "对记录内容较强；对根因不足",
+                  "limitations": [
+                    "时间接近不等于因果；未覆盖的检查不能视为排除。"
+                  ],
+                  "nextStep": "保存工作后，由用户一次只更换一个 USB 接口或线缆，记录断连是否重复，再发起复测。"
+                }
+              ],
+              "evidence": [
+                {
+                  "id": "hang",
+                  "kind": "windows.event",
+                  "source": "fixture:fault-lab",
+                  "observedAtUtc": "2026-11-14T01:30:00Z",
+                  "provider": "Application Hang",
+                  "channel": "Application",
+                  "eventId": 1002,
+                  "schemaVersion": 0,
+                  "recordId": 1,
+                  "entity": "SYNTHETIC.exe",
+                  "bootSession": "fixture-boot",
+                  "fields": {
+                    "measurementOrigin": "synthetic_fixture"
+                  }
+                },
+                {
+                  "id": "pnp-device",
+                  "kind": "device.snapshot",
+                  "source": "fixture:fault-lab",
+                  "observedAtUtc": "2026-11-14T01:30:00Z",
+                  "provider": "unused",
+                  "channel": "unused",
+                  "eventId": 0,
+                  "schemaVersion": 0,
+                  "recordId": 1,
+                  "entity": "SYNTHETIC.exe",
+                  "bootSession": "fixture-boot",
+                  "fields": {
+                    "configManagerErrorCode": "43",
+                    "measurementOrigin": "synthetic_fixture"
+                  }
+                }
+              ],
+              "coverage": [
+                {
+                  "source": "windows.system_snapshot",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                },
+                {
+                  "source": "windows.event_window",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                },
+                {
+                  "source": "usb_pnp.snapshot",
+                  "status": "available",
+                  "detail": "合成回放：未运行 Windows 采集器。"
+                }
+              ],
+              "unknowns": [
+                "合成故障样本，不是本机诊断。"
+              ]
+            },
+            "explanation": {
+              "origin": "local_rules",
+              "summary": "以下是记录中的观察与排查顺序，不是唯一根因诊断。",
+              "exclusions": [
+                "现有证据不足以排除未覆盖的硬件、驱动和软件因素。"
+              ],
+              "recommendations": [
+                {
+                  "priority": 1,
+                  "instruction": "记录卡顿时的操作和应用版本，保存文件后只改变一个应用相关因素再复测。",
+                  "expectedResult": "记录是否复现、发生时间和新提示；只改变一个变量后发起复测。",
+                  "stopCondition": "出现数据丢失、持续掉盘或系统不稳定时停止复现，先保存资料。",
+                  "evidenceIds": [
+                    "hang"
+                  ]
+                },
+                {
+                  "priority": 2,
+                  "instruction": "保存工作后，由用户一次只更换一个 USB 接口或线缆，记录断连是否重复，再发起复测。",
+                  "expectedResult": "记录是否复现、发生时间和新提示；只改变一个变量后发起复测。",
+                  "stopCondition": "出现数据丢失、持续掉盘或系统不稳定时停止复现，先保存资料。",
+                  "evidenceIds": [
+                    "pnp-device"
+                  ]
+                }
+              ],
+              "fallbackReason": "模型未配置或不可用，使用本地规则。",
+              "suggestedActionIds": []
+            },
+            "comparison": null
+          }
+        ]
+      }
+    }
+  }
+]

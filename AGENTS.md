@@ -33,3 +33,11 @@ RULES:
   docs authoring     build an integration package, and every field it holds
   upgrade --from <old version> --apply   run after a dependency bump
 <!-- ASTRYX:END -->
+
+## 协作与 Token 优化规范（/learn 持久化规则）
+
+- **每轮回复末尾必须附带「下一阶段模型建议」**：
+  为了节约 Token 并发挥不同模型的优势，在每次回复的最后，根据当前任务进度与下一步预计开展的工作，明确预判并推荐下一阶段最适合使用的模型：
+  - **轻量快速模型（如 `hydrogen` / `flash`）**：适合纯文案微调、局部小改动、配置项调整或单纯执行编译打包命令（极致省 Token、响应最快）。
+  - **主力工程模型（如 `4-argon` / `pro`）**：适合多维度用户体验走查、跨文件状态流修复、Rust + React 联调与中等规模重构。
+  - **高阶架构/编排模型（如 `orchestrator`）**：适合跨模块大型新功能设计、复杂并发/安全边界重构或多子任务并行协同。

@@ -209,6 +209,7 @@ impl ArtifactStore {
             format: match format {
                 ReportFormat::SmartctlJson => "smartctl_json",
                 ReportFormat::CrystalDiskInfoText => "crystal_disk_info_text",
+                ReportFormat::HwinfoCsv => "hwinfo_csv",
             }
             .into(),
             parser_version: parsed.parser_version.clone(),

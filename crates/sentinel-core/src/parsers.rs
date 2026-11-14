@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashSet};
+mod sensors;
 
 pub const MAX_REPORT_BYTES: usize = 20 * 1024 * 1024;
 const MAX_JSON_DEPTH: usize = 64;
@@ -19,6 +20,7 @@ const MAX_JSON_TOKENS: usize = 200_000;
 pub enum ReportFormat {
     SmartctlJson,
     CrystalDiskInfoText,
+    HwinfoCsv,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,7 +67,7 @@ pub fn parse_report(format: ReportFormat, bytes: &[u8]) -> Result<ParseResult, P
     if bytes.len() > MAX_REPORT_BYTES {
         return Err(ParseError::TooLarge);
     }
-    let (text, encoding) = decode(bytes, matches!(format, ReportFormat::CrystalDiskInfoText))?;
+    let (text, encoding) = decode(bytes, !matches!(format, ReportFormat::SmartctlJson))?;
     if text.contains('\0') {
         return Err(ParseError::InvalidText);
     }
@@ -84,6 +86,7 @@ pub fn parse_report(format: ReportFormat, bytes: &[u8]) -> Result<ParseResult, P
     match format {
         ReportFormat::SmartctlJson => smartctl(&text, &mut result)?,
         ReportFormat::CrystalDiskInfoText => cdi(&text, &mut result)?,
+        ReportFormat::HwinfoCsv => sensors::hwinfo(&text, &mut result)?,
     }
     Ok(result)
 }

@@ -32,6 +32,7 @@ import type {
   BackendCapabilities,
   CaseRecord,
   ExportResult,
+  Conversation,
 } from "./domain/contracts";
 import { DiagnosePage } from "./pages/DiagnosePage";
 import { HardwarePage } from "./pages/HardwarePage";
@@ -67,6 +68,11 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
   const [appStatus, setAppStatus] = useState<AppStatus>();
   const [capabilities, setCapabilities] = useState<BackendCapabilities>();
   const [cases, setCases] = useState<CaseRecord[]>([]);
+  const [chats, setChats] = useState<Conversation[]>([]);
+  const [conversationId, setConversationId] = useState<string>(() =>
+    crypto.randomUUID(),
+  );
+  const [chatToDelete, setChatToDelete] = useState<Conversation | null>(null);
   const [activeCase, setActiveCase] = useState<CaseRecord | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
   const sessionRef = useRef(0);
@@ -87,10 +93,11 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
 
   const refreshAll = useCallback(async () => {
     const generation = ++refreshGeneration.current;
-    const [stRes, capsRes, listRes] = await Promise.allSettled([
+    const [stRes, capsRes, listRes, chatsRes] = await Promise.allSettled([
       diagnostics.status(),
       diagnostics.capabilities(),
       diagnostics.list(),
+      diagnostics.listChats(),
     ]);
     if (stRes.status === "fulfilled") setAppStatus(stRes.value);
     if (capsRes.status === "fulfilled") setCapabilities(capsRes.value);
@@ -99,6 +106,11 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
       generation === refreshGeneration.current
     )
       setCases(listRes.value);
+    if (
+      chatsRes.status === "fulfilled" &&
+      generation === refreshGeneration.current
+    )
+      setChats(chatsRes.value);
   }, []);
 
   useEffect(() => {
@@ -118,7 +130,11 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
     setRunBusy(value);
   }, []);
 
-  function openSession(record: CaseRecord | null, startAudit = false) {
+  function openSession(
+    record: CaseRecord | null,
+    startAudit = false,
+    chatId?: string,
+  ) {
     if (runBusyRef.current) {
       setPage("diagnose");
       return;
@@ -130,6 +146,7 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
     sessionRef.current += 1;
     setSessionKey(sessionRef.current);
     setAutoStartAudit(startAudit);
+    setConversationId(chatId ?? crypto.randomUUID());
     setActiveCase(record);
     setPage("diagnose");
     if (startAudit) handleRunBusy(true);
@@ -269,7 +286,11 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
               isDisabled={runBusy}
               icon={PlusIcon}
               href="#"
-              isSelected={page === "diagnose" && activeCase === null}
+              isSelected={
+                page === "diagnose" &&
+                activeCase === null &&
+                !chats.some((c) => c.id === conversationId)
+              }
               onClick={(e) => {
                 e.preventDefault();
                 openSession(null);
@@ -298,6 +319,48 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
           </SideNavSection>
 
           <Divider />
+
+          {chats.length ? (
+            <SideNavSection title={`最近对话 (${chats.length})`}>
+              {chats.map((chat) => (
+                <SideNavItem
+                  key={chat.id}
+                  label={chat.title}
+                  href="#"
+                  isDisabled={runBusy}
+                  isSelected={
+                    page === "diagnose" &&
+                    !activeCase &&
+                    conversationId === chat.id
+                  }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openSession(null, false, chat.id);
+                  }}
+                  actions={
+                    <DropdownMenu
+                      presentation="popover"
+                      button={{
+                        label: `对话操作：${chat.title}`,
+                        icon: <Icon icon={EllipsisHorizontalIcon} size="sm" />,
+                        isIconOnly: true,
+                        variant: "ghost",
+                        isDisabled: runBusy,
+                      }}
+                      items={[
+                        {
+                          id: "delete",
+                          label: "删除对话",
+                          variant: "destructive",
+                          onClick: () => setChatToDelete(chat),
+                        },
+                      ]}
+                    />
+                  }
+                />
+              ))}
+            </SideNavSection>
+          ) : null}
 
           <SideNavSection title={`最近案例 (${cases.length})`}>
             <VStack gap={0.5}>
@@ -377,6 +440,9 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
           status={appStatus}
           capabilities={capabilities}
           activeCase={activeCase}
+          conversationId={conversationId}
+          onChatsChanged={refreshAll}
+          onOpenTools={() => setPage("tools")}
           autoStartAudit={autoStartAudit}
           isVisible={page === "diagnose"}
           onBusyChange={handleRunBusy}
@@ -389,7 +455,17 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
       </VStack>
       {page === "hardware" ? <HardwarePage onAudit={openAudit} /> : null}
 
-      {page === "tools" ? <ToolsPage capabilities={capabilities} /> : null}
+      {page === "tools" ? (
+        <ToolsPage
+          capabilities={capabilities}
+          onRecordsChanged={refreshAll}
+          onBusyChange={handleRunBusy}
+          onCaseImported={(record) => {
+            openSession(record);
+            void refreshAll();
+          }}
+        />
+      ) : null}
 
       {page === "settings" ? (
         <SettingsPage
@@ -403,6 +479,55 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
         />
       ) : null}
 
+      <Dialog
+        isOpen={chatToDelete !== null}
+        purpose="required"
+        onOpenChange={(open) => {
+          if (!open && !caseActionBusy) setChatToDelete(null);
+        }}
+      >
+        <DialogHeader
+          title="删除这段对话？"
+          subtitle={`将删除「${chatToDelete?.title ?? ""}」的本机消息记录，无法恢复。`}
+        />
+        <VStack gap={3}>
+          {caseError ? <Banner status="error" title={caseError} /> : null}
+          <HStack gap={2} hAlign="end">
+            <Button
+              label="取消"
+              variant="secondary"
+              isDisabled={caseActionBusy}
+              onClick={() => {
+                setChatToDelete(null);
+                setCaseError("");
+              }}
+            />
+            <Button
+              label="删除对话"
+              isDisabled={caseActionBusy}
+              onClick={() =>
+                void (async () => {
+                  if (!chatToDelete || caseActionPending.current) return;
+                  caseActionPending.current = true;
+                  setCaseActionBusy(true);
+                  setCaseError("");
+                  try {
+                    await diagnostics.deleteChat(chatToDelete.id);
+                    if (conversationId === chatToDelete.id) openSession(null);
+                    setChatToDelete(null);
+                    await refreshAll();
+                  } catch (error) {
+                    setCaseError(String(error));
+                  } finally {
+                    caseActionPending.current = false;
+                    setCaseActionBusy(false);
+                  }
+                })()
+              }
+            />
+          </HStack>
+        </VStack>
+      </Dialog>
       <Dialog
         isOpen={Boolean(caseAction)}
         purpose={caseAction?.kind === "delete" ? "required" : "form"}

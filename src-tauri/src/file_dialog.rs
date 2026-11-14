@@ -33,7 +33,7 @@ pub fn select_report() -> Result<Option<std::path::PathBuf>, String> {
         fn GetOpenFileNameW(value: *mut OpenFileName) -> i32;
         fn CommDlgExtendedError() -> u32;
     }
-    let filter: Vec<u16> = "Report (*.json;*.txt)\0*.json;*.txt\0\0"
+    let filter: Vec<u16> = "Report (*.json;*.txt;*.csv)\0*.json;*.txt;*.csv\0\0"
         .encode_utf16()
         .collect();
     let title: Vec<u16> = "Sentinel PC - 选择要导入的报告\0".encode_utf16().collect();
