@@ -114,4 +114,4 @@ The compiled standalone binary will be output to `target/release/sentinel-pc.exe
 ## License & Acknowledgments
 
 - See [docs/UPSTREAM_REUSE.md](docs/UPSTREAM_REUSE.md) and [docs/reference/IMPORT_MANIFEST.json](docs/reference/IMPORT_MANIFEST.json) for upstream open-source references and attribution details.
-- A repository `LICENSE` file will be added by the repository owner upon final license selection.
+- This repository's original source code is licensed under the [MIT License](LICENSE).

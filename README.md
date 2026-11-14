@@ -114,4 +114,4 @@ npm run tauri build -- --no-bundle
 ## 许可证与致谢
 
 - 第三方开源参考与归属清单请参见 [docs/UPSTREAM_REUSE.md](docs/UPSTREAM_REUSE.md) 与 [docs/reference/IMPORT_MANIFEST.json](docs/reference/IMPORT_MANIFEST.json)。
-- 本仓库自有代码许可证待仓库所有者最终确认并补充 `LICENSE` 文件。
+- 本仓库自有代码采用 [MIT License](LICENSE) 开源。
