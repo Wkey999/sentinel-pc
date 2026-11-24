@@ -100,6 +100,31 @@ export function resolveBackgroundStyle(
   return { url: preset.url, size: "cover", position: "center 20%" };
 }
 
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("读取图片内容失败，请重试。"));
+      }
+    };
+    reader.onerror = () => reject(new Error("读取图片文件失败，请检查文件权限。"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () =>
+      reject(new Error("无法解码该图片文件，请尝试 PNG、JPG 或 WebP 格式。"));
+    el.src = dataUrl;
+  });
+}
+
 export async function processBackgroundImage(
   file: File,
 ): Promise<Omit<CustomBackground, "fit">> {
@@ -113,17 +138,33 @@ export async function processBackgroundImage(
     throw new Error("图片文件超过 20 MB，请先压缩或换一张较小的图片。");
   }
 
-  const objectUrl = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const el = new Image();
-      el.onload = () => resolve(el);
-      el.onerror = () => reject(new Error("无法解码该图片文件，请尝试 PNG 或 JPG 格式。"));
-      el.src = objectUrl;
-    });
+  let drawSource: CanvasImageSource;
+  let srcW = 0;
+  let srcH = 0;
+  let bitmap: ImageBitmap | null = null;
 
-    const srcW = img.naturalWidth || img.width;
-    const srcH = img.naturalHeight || img.height;
+  try {
+    if (typeof createImageBitmap === "function") {
+      try {
+        bitmap = await createImageBitmap(file);
+        drawSource = bitmap;
+        srcW = bitmap.width;
+        srcH = bitmap.height;
+      } catch {
+        const rawDataUrl = await readFileAsDataUrl(file);
+        const img = await loadImageFromDataUrl(rawDataUrl);
+        drawSource = img;
+        srcW = img.naturalWidth || img.width;
+        srcH = img.naturalHeight || img.height;
+      }
+    } else {
+      const rawDataUrl = await readFileAsDataUrl(file);
+      const img = await loadImageFromDataUrl(rawDataUrl);
+      drawSource = img;
+      srcW = img.naturalWidth || img.width;
+      srcH = img.naturalHeight || img.height;
+    }
+
     if (!srcW || !srcH) {
       throw new Error("图片尺寸无效。");
     }
@@ -139,7 +180,7 @@ export async function processBackgroundImage(
     if (!ctx) {
       throw new Error("当前环境不支持画布压缩，无法导入图片。");
     }
-    ctx.drawImage(img, 0, 0, width, height);
+    ctx.drawImage(drawSource, 0, 0, width, height);
 
     let dataUrl = canvas.toDataURL("image/webp", 0.86);
     if (!dataUrl.startsWith("data:image/webp") || dataUrl.length > MAX_DATA_URL_LENGTH) {
@@ -159,6 +200,6 @@ export async function processBackgroundImage(
       height,
     };
   } finally {
-    URL.revokeObjectURL(objectUrl);
+    bitmap?.close();
   }
 }

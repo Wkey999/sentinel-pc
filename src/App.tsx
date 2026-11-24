@@ -252,7 +252,7 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
     <AppShell
       contentPadding={0}
       style={{
-        backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--color-background-body) 14%, transparent), color-mix(in srgb, var(--color-background-body) 22%, transparent)), url(${resolvedBackground.url})`,
+        backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--color-background-body) 14%, transparent), color-mix(in srgb, var(--color-background-body) 22%, transparent)), url("${resolvedBackground.url}")`,
         backgroundSize: resolvedBackground.size,
         backgroundPosition: resolvedBackground.position,
         backgroundRepeat: "no-repeat",
