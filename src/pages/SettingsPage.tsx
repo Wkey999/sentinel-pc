@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
@@ -12,7 +12,13 @@ import { Heading, Text } from "@astryxdesign/core/Text";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { Token } from "@astryxdesign/core/Token";
 import { Thumbnail } from "@astryxdesign/core/Thumbnail";
-import { backgrounds, type BackgroundId } from "../domain/appearance";
+import {
+  backgrounds,
+  processBackgroundImage,
+  type BackgroundFit,
+  type BackgroundId,
+  type CustomBackground,
+} from "../domain/appearance";
 import type { AppStatus, BackendCapabilities } from "../domain/contracts";
 import { diagnostics } from "../services/diagnostics";
 import brandEmblemUrl from "../assets/brand-emblem.png";
@@ -25,6 +31,8 @@ interface SettingsPageProps {
   onColorModeChange: (mode: "dark" | "light" | "system") => void;
   backgroundId: BackgroundId;
   onBackgroundChange: (id: BackgroundId) => void;
+  customBackground: CustomBackground | null;
+  onCustomBackgroundChange: (next: CustomBackground | null) => boolean;
 }
 
 export function SettingsPage({
@@ -35,7 +43,12 @@ export function SettingsPage({
   onColorModeChange,
   backgroundId,
   onBackgroundChange,
+  customBackground,
+  onCustomBackgroundChange,
 }: SettingsPageProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [customBgBusy, setCustomBgBusy] = useState(false);
+  const [customBgError, setCustomBgError] = useState("");
   const [section, setSection] = useState<string>("runtime");
   const [endpoint, setEndpoint] = useState(
     capabilities?.modelTarget ?? "https://api.deepseek.com/chat/completions",
@@ -53,6 +66,32 @@ export function SettingsPage({
 
   const isMock = status?.mode !== "native-synthetic";
   const realEnabled = Boolean(capabilities?.realCollectionEnabled);
+
+  async function handleImportBackground(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || customBgBusy) return;
+    setCustomBgBusy(true);
+    setCustomBgError("");
+    try {
+      const processed = await processBackgroundImage(file);
+      const next: CustomBackground = {
+        ...processed,
+        fit: customBackground?.fit ?? "cover",
+      };
+      if (!onCustomBackgroundChange(next)) {
+        setCustomBgError("浏览器本地存储空间不足，请尝试换一张更小的图片。");
+        return;
+      }
+      onBackgroundChange("custom");
+    } catch (error) {
+      setCustomBgError(
+        error instanceof Error ? error.message : "图片导入失败，请重试。",
+      );
+    } finally {
+      setCustomBgBusy(false);
+    }
+  }
 
   async function handleSaveModel() {
     if (modelBusy || testingModel) return;
@@ -198,12 +237,43 @@ export function SettingsPage({
                     />
                   </HStack>
                   <VStack gap={3}>
-                    <Text size="sm" weight="bold">
-                      背景图片
-                    </Text>
-                    <Text size="sm" color="secondary">
-                      点击下方预览即可切换，自动记住选择；配色模式保持独立。
-                    </Text>
+                    <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
+                      <VStack gap={1}>
+                        <Text size="sm" weight="bold">
+                          背景图片
+                        </Text>
+                        <Text size="sm" color="secondary">
+                          点击下方预览即可切换，支持导入本地图片并自动压缩适配。
+                        </Text>
+                      </VStack>
+                      <HStack gap={2} vAlign="center">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/bmp,image/*"
+                          hidden
+                          onChange={(e) => void handleImportBackground(e)}
+                        />
+                        <Button
+                          label={
+                            customBackground
+                              ? "更换本地图片"
+                              : "导入本地图片（自适应）"
+                          }
+                          variant="secondary"
+                          size="sm"
+                          isLoading={customBgBusy}
+                          onClick={() => fileInputRef.current?.click()}
+                        />
+                      </HStack>
+                    </HStack>
+                    {customBgError ? (
+                      <Banner
+                        status="error"
+                        title="背景图片导入失败"
+                        description={customBgError}
+                      />
+                    ) : null}
                     <HStack gap={4} wrap="wrap" width="100%">
                       {backgrounds.map((item) => (
                         <VStack
@@ -238,7 +308,81 @@ export function SettingsPage({
                           />
                         </VStack>
                       ))}
+                      {customBackground ? (
+                        <VStack
+                          gap={2}
+                          style={{
+                            flex: "1 1 14rem",
+                            minWidth: 0,
+                            maxWidth: "18rem",
+                          }}
+                        >
+                          <Thumbnail
+                            src={customBackground.dataUrl}
+                            alt={customBackground.name}
+                            label={`切换背景：${customBackground.name}`}
+                            onClick={() => onBackgroundChange("custom")}
+                            style={{
+                              width: "100%",
+                              height: "auto",
+                              aspectRatio: "16 / 9",
+                              borderRadius: "var(--radius-container)",
+                              objectFit:
+                                customBackground.fit === "contain"
+                                  ? "contain"
+                                  : "cover",
+                            }}
+                          />
+                          <HStack gap={2} width="100%">
+                            <Button
+                              label={`${backgroundId === "custom" ? "已选用 · " : "使用 · "}自定义图片`}
+                              variant={
+                                backgroundId === "custom"
+                                  ? "primary"
+                                  : "secondary"
+                              }
+                              aria-pressed={backgroundId === "custom"}
+                              style={{ flex: 1, minWidth: 0 }}
+                              onClick={() => onBackgroundChange("custom")}
+                            />
+                            <Button
+                              label="移除"
+                              variant="ghost"
+                              onClick={() => {
+                                setCustomBgError("");
+                                onCustomBackgroundChange(null);
+                              }}
+                            />
+                          </HStack>
+                        </VStack>
+                      ) : null}
                     </HStack>
+                    {customBackground ? (
+                      <HStack hAlign="between" vAlign="center" width="100%" wrap="wrap" gap={2}>
+                        <Text size="sm" color="secondary">
+                          自定义图「{customBackground.name}」（{customBackground.width}×{customBackground.height}）适配方式
+                        </Text>
+                        <Selector
+                          label="自定义背景适配方式"
+                          isLabelHidden
+                          size="sm"
+                          value={customBackground.fit}
+                          onChange={(v) => {
+                            const updated: CustomBackground = {
+                              ...customBackground,
+                              fit: v as BackgroundFit,
+                            };
+                            onCustomBackgroundChange(updated);
+                            onBackgroundChange("custom");
+                          }}
+                          options={[
+                            { value: "cover", label: "铺满裁切（智能居中）" },
+                            { value: "top", label: "顶部对齐（适合立绘/人像）" },
+                            { value: "contain", label: "完整显示（不裁切）" },
+                          ]}
+                        />
+                      </HStack>
+                    ) : null}
                   </VStack>
                   <Divider />
                   <Heading level={4}>当前运行环境</Heading>

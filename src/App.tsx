@@ -40,10 +40,13 @@ import { ToolsPage } from "./pages/ToolsPage";
 import { diagnostics } from "./services/diagnostics";
 import { latestAudit } from "./domain/case-session";
 import {
-  backgrounds,
   readBackground,
+  readCustomBackground,
+  resolveBackgroundStyle,
   saveBackground,
+  saveCustomBackground,
   type BackgroundId,
+  type CustomBackground,
 } from "./domain/appearance";
 
 type NavPage = "hardware" | "diagnose" | "tools" | "settings";
@@ -55,13 +58,27 @@ interface AppProps {
 }
 
 export function App({ colorMode, onColorModeChange }: AppProps) {
+  const [customBackground, setCustomBackground] =
+    useState<CustomBackground | null>(readCustomBackground);
   const [backgroundId, setBackgroundId] =
     useState<BackgroundId>(readBackground);
-  const background =
-    backgrounds.find((item) => item.id === backgroundId) ?? backgrounds[0];
+  const resolvedBackground = resolveBackgroundStyle(
+    backgroundId,
+    customBackground,
+  );
   const changeBackground = (id: BackgroundId) => {
     setBackgroundId(id);
     saveBackground(id);
+  };
+  const changeCustomBackground = (next: CustomBackground | null): boolean => {
+    const saved = saveCustomBackground(next);
+    if (!saved) return false;
+    setCustomBackground(next);
+    if (!next && backgroundId === "custom") {
+      setBackgroundId("original");
+      saveBackground("original");
+    }
+    return true;
   };
   const [page, setPage] = useState<NavPage>("hardware");
   const [appStatus, setAppStatus] = useState<AppStatus>();
@@ -235,9 +252,9 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
     <AppShell
       contentPadding={0}
       style={{
-        backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--color-background-body) 14%, transparent), color-mix(in srgb, var(--color-background-body) 22%, transparent)), url(${background.url})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center 20%",
+        backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--color-background-body) 14%, transparent), color-mix(in srgb, var(--color-background-body) 22%, transparent)), url(${resolvedBackground.url})`,
+        backgroundSize: resolvedBackground.size,
+        backgroundPosition: resolvedBackground.position,
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
       }}
@@ -485,6 +502,8 @@ export function App({ colorMode, onColorModeChange }: AppProps) {
           onColorModeChange={onColorModeChange}
           backgroundId={backgroundId}
           onBackgroundChange={changeBackground}
+          customBackground={customBackground}
+          onCustomBackgroundChange={changeCustomBackground}
         />
       ) : null}
 
